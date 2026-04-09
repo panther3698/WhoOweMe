@@ -90,7 +90,7 @@ fun SettingsScreen(
     val scope = rememberCoroutineScope()
     val isDarkMode by viewModel.isDarkMode.collectAsState(initial = false)
     val remindersEnabled by viewModel.remindersEnabled.collectAsState(initial = true)
-    val appLockEnabled by viewModel.appLockEnabled.collectAsState(initial = false)
+    val appLockEnabled by viewModel.appLockEnabled.collectAsState(initial = null)
     var restoreUri by remember { mutableStateOf<Uri?>(null) }
 
     val exportBackupLauncher = rememberLauncherForActivityResult(
@@ -225,7 +225,7 @@ fun SettingsScreen(
                     title = stringResource(R.string.app_lock_title),
                     subtitle = stringResource(R.string.app_lock_subtitle),
                     icon = Icons.Outlined.Lock,
-                    checked = appLockEnabled,
+                    checked = appLockEnabled == true,
                     onCheckedChange = {
                         if (it && !AppLockManager.isAuthAvailable(context)) {
                             Toast.makeText(context, context.getString(R.string.app_lock_setup_required), Toast.LENGTH_LONG).show()

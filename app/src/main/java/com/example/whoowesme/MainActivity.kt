@@ -1,6 +1,7 @@
 package com.example.whoowesme
 
 import android.os.Bundle
+import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.biometric.BiometricPrompt
 import androidx.compose.animation.AnimatedContentTransitionScope

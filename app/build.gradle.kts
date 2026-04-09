@@ -78,6 +78,7 @@ dependencies {
 
     // Splash Screen
     implementation(libs.androidx.core.splashscreen)
+    implementation(libs.androidx.fragment.ktx)
 
     implementation(libs.room.runtime)
     implementation(libs.room.ktx)
