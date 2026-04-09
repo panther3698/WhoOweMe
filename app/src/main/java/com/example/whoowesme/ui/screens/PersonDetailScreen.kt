@@ -2,7 +2,6 @@ package com.example.whoowesme.ui.screens
 
 import androidx.compose.animation.*
 import androidx.compose.foundation.background
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -18,20 +17,32 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.whoowesme.model.Person
+import com.example.whoowesme.model.ReminderTone
 import com.example.whoowesme.model.enums.TransactionType
+import com.example.whoowesme.ui.components.PremiumEmptyState
 import com.example.whoowesme.ui.components.TransactionItem
+import com.example.whoowesme.ui.theme.BackdropBottomDark
+import com.example.whoowesme.ui.theme.BackdropBottomLight
+import com.example.whoowesme.ui.theme.BackdropTopDark
+import com.example.whoowesme.ui.theme.BackdropTopLight
 import com.example.whoowesme.ui.theme.*
+import com.example.whoowesme.util.MoneyFormatter
 import com.example.whoowesme.util.PdfGenerator
 import com.example.whoowesme.viewmodel.MainViewModel
+import java.text.SimpleDateFormat
 import java.util.*
+import java.util.concurrent.TimeUnit
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -43,13 +54,39 @@ fun PersonDetailScreen(
     onNavigateToEditPerson: (Long) -> Unit
 ) {
     val context = LocalContext.current
+    val haptic = LocalHapticFeedback.current
     val transactions by viewModel.getTransactionsForPerson(personId).collectAsState(initial = emptyList())
+    val isDarkMode by viewModel.isDarkMode.collectAsState(initial = false)
     var person by remember { mutableStateOf<Person?>(null) }
     var showDeletePersonDialog by remember { mutableStateOf(false) }
     var showReminderConfirmDialog by remember { mutableStateOf(false) }
+    var selectedReminderTone by remember { mutableStateOf(ReminderTone.GENTLE) }
 
     val totalBalance = remember(transactions) {
         transactions.sumOf { if (it.type == TransactionType.GIVEN) it.amount else -it.amount }
+    }
+    val activeDueDate = remember(transactions, totalBalance) {
+        if (totalBalance > 0) {
+            transactions
+                .filter { it.type == TransactionType.GIVEN }
+                .mapNotNull { it.dueDate }
+                .minOrNull()
+        } else {
+            null
+        }
+    }
+    val activePromisedPaymentDate = remember(transactions, totalBalance) {
+        if (totalBalance > 0) {
+            transactions
+                .filter { it.type == TransactionType.GIVEN }
+                .mapNotNull { it.promisedPaymentDate }
+                .maxOrNull()
+        } else {
+            null
+        }
+    }
+    val dueDateText = remember(activeDueDate) {
+        activeDueDate?.let { SimpleDateFormat("dd MMM yyyy", Locale.getDefault()).format(Date(it)) }
     }
 
     LaunchedEffect(personId) {
@@ -65,6 +102,7 @@ fun PersonDetailScreen(
             confirmButton = {
                 Button(
                     onClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                         person?.let { viewModel.deletePerson(it) }
                         showDeletePersonDialog = false
                         onNavigateBack()
@@ -87,11 +125,50 @@ fun PersonDetailScreen(
             onDismissRequest = { showReminderConfirmDialog = false },
             icon = { Icon(Icons.Outlined.NotificationsActive, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
             title = { Text("Send WhatsApp Reminder?") },
-            text = { Text("A WhatsApp message will be prepared to remind ${person?.name} about the balance of ₹ ${String.format(Locale.getDefault(), "%,.2f", Math.abs(totalBalance))}. You'll need to hit send in WhatsApp.") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Text("A WhatsApp message will be prepared for ${person?.name} about ${MoneyFormatter.format(totalBalance, absolute = true)}.")
+                    dueDateText?.let {
+                        Text(
+                            text = "Current due date: $it",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    ReminderTone.entries.forEach { tone ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            RadioButton(
+                                selected = selectedReminderTone == tone,
+                                onClick = { selectedReminderTone = tone }
+                            )
+                            Column {
+                                Text(tone.title, fontWeight = FontWeight.SemiBold)
+                                Text(
+                                    text = tone.description,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+                    }
+                }
+            },
             confirmButton = {
                 Button(
                     onClick = {
-                        person?.let { viewModel.sendManualReminder(context, it, totalBalance) }
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        person?.let {
+                            viewModel.sendManualReminder(
+                                context = context,
+                                person = it,
+                                balance = totalBalance,
+                                tone = selectedReminderTone,
+                                dueDate = activePromisedPaymentDate ?: activeDueDate
+                            )
+                        }
                         showReminderConfirmDialog = false
                     }
                 ) {
@@ -107,14 +184,24 @@ fun PersonDetailScreen(
     }
 
     Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             CenterAlignedTopAppBar(
                 title = {
-                    Text(
-                        person?.name ?: "Details",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold
-                    )
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            person?.name ?: "Details",
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.ExtraBold
+                        )
+                        person?.phoneNumber?.takeIf { it.isNotBlank() }?.let {
+                            Text(
+                                text = it,
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
                 },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
@@ -126,6 +213,14 @@ fun PersonDetailScreen(
                         Icon(Icons.Outlined.Edit, contentDescription = "Edit")
                     }
                     IconButton(onClick = { 
+                        person?.let { p ->
+                            val file = PdfGenerator.generateStatement(context, p, transactions, totalBalance)
+                            file?.let { PdfGenerator.openPdf(context, it) }
+                        }
+                    }) {
+                        Icon(Icons.Outlined.Visibility, contentDescription = "Preview Statement")
+                    }
+                    IconButton(onClick = { 
                         person?.let { PdfGenerator.generateAndShareStatement(context, it, transactions, totalBalance) }
                     }) {
                         Icon(Icons.Outlined.Share, contentDescription = "Share Statement")
@@ -135,7 +230,7 @@ fun PersonDetailScreen(
                     }
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background
+                    containerColor = Color.Transparent
                 )
             )
         },
@@ -150,25 +245,54 @@ fun PersonDetailScreen(
             }
         }
     ) { padding ->
+        val backdrop = if (isDarkMode) {
+            listOf(BackdropTopDark, BackdropBottomDark)
+        } else {
+            listOf(BackdropTopLight, BackdropBottomLight)
+        }
+
         Column(
             modifier = Modifier
-                .padding(padding)
                 .fillMaxSize()
+                .background(Brush.verticalGradient(backdrop))
+                .padding(padding)
         ) {
             DetailHeader(
                 totalBalance = totalBalance,
+                isDarkMode = isDarkMode,
+                dueDate = activeDueDate,
+                promisedPaymentDate = activePromisedPaymentDate,
                 person = person,
                 viewModel = viewModel,
                 onNavigateToAddTransaction = onNavigateToAddTransaction,
                 onSendReminder = { showReminderConfirmDialog = true }
             )
 
-            Text(
-                text = "Transaction History",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(horizontal = 24.dp, vertical = 16.dp)
-            )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp, vertical = 16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Transaction History",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+                Surface(
+                    shape = CircleShape,
+                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.92f)
+                ) {
+                    Text(
+                        text = "${transactions.size} entries",
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
 
             if (transactions.isEmpty()) {
                 EmptyTransactionsState()
@@ -199,11 +323,15 @@ fun PersonDetailScreen(
                     ) { (transaction, balanceAtThatTime) ->
                         TransactionItem(
                             transaction = transaction,
+                            isDarkMode = isDarkMode,
                             runningBalance = balanceAtThatTime,
                             onEdit = { 
                                 onNavigateToAddTransaction(personId, null, transaction.transactionId)
                             },
-                            onDelete = { viewModel.deleteTransaction(transaction) }
+                            onDelete = { viewModel.deleteTransaction(transaction) },
+                            onAddNextRecurring = if (transaction.recurrenceFrequency != com.example.whoowesme.model.enums.RecurrenceFrequency.NONE) {
+                                { viewModel.createNextRecurringTransaction(transaction) }
+                            } else null
                         )
                     }
                 }
@@ -215,56 +343,86 @@ fun PersonDetailScreen(
 @Composable
 fun DetailHeader(
     totalBalance: Double,
+    isDarkMode: Boolean,
+    dueDate: Long?,
+    promisedPaymentDate: Long?,
     person: Person?,
     viewModel: MainViewModel,
     onNavigateToAddTransaction: (Long, String?, Long?) -> Unit,
     onSendReminder: () -> Unit
 ) {
-    val context = LocalContext.current
-    val isDark = isSystemInDarkTheme()
-    
     val balanceLabel = when {
-        totalBalance > 0 -> "THEY OWE YOU"
-        totalBalance < 0 -> "YOU OWE THEM"
-        else -> "ALL SETTLED"
+        totalBalance > 0 -> "RECEIVABLE"
+        totalBalance < 0 -> "PAYABLE"
+        else -> "SETTLED"
     }
 
     val balanceColor = if (totalBalance >= 0) {
-        if (isDark) GreenIncomeDark else GreenIncome
+        if (isDarkMode) GreenIncomeDark else GreenIncome
     } else {
-        if (isDark) RedExpenseDark else RedExpense
+        if (isDarkMode) RedExpenseDark else RedExpense
     }
     
     val backgroundColor = if (totalBalance >= 0) {
-        if (isDark) GreenIncome.copy(alpha = 0.15f) else GreenIncomeLight
+        if (isDarkMode) GreenIncome.copy(alpha = 0.08f) else GreenIncomeLight.copy(alpha = 0.6f)
     } else {
-        if (isDark) RedExpense.copy(alpha = 0.15f) else RedExpenseLight
+        if (isDarkMode) RedExpense.copy(alpha = 0.08f) else RedExpenseLight.copy(alpha = 0.6f)
     }
 
-    Card(
+    Surface(
         modifier = Modifier
             .fillMaxWidth()
             .padding(24.dp),
-        shape = RoundedCornerShape(28.dp),
-        colors = CardDefaults.cardColors(containerColor = backgroundColor),
-        elevation = CardDefaults.cardElevation(0.dp)
+        shape = RoundedCornerShape(32.dp),
+        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.7f),
+        tonalElevation = 2.dp
     ) {
         Column(
-            modifier = Modifier.padding(24.dp),
+            modifier = Modifier
+                .background(
+                    brush = Brush.verticalGradient(
+                        listOf(
+                            backgroundColor,
+                            Color.Transparent
+                        )
+                    )
+                )
+                .padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
                 text = balanceLabel,
                 style = MaterialTheme.typography.labelLarge,
-                fontWeight = FontWeight.Bold,
-                color = balanceColor.copy(alpha = 0.8f)
-            )
-            Text(
-                text = "₹ ${String.format(Locale.getDefault(), "%,.2f", Math.abs(totalBalance))}",
-                style = MaterialTheme.typography.displayMedium,
                 fontWeight = FontWeight.ExtraBold,
+                letterSpacing = 1.2.sp,
+                color = balanceColor.copy(alpha = 0.85f)
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = MoneyFormatter.format(totalBalance, absolute = true),
+                style = MaterialTheme.typography.displayMedium,
+                fontWeight = FontWeight.Black,
                 color = balanceColor
             )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = when {
+                    totalBalance > 0 -> "Everything due from this person."
+                    totalBalance < 0 -> "What you still need to return."
+                    else -> "No outstanding balance right now."
+                },
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center
+            )
+            if (dueDate != null && totalBalance > 0) {
+                Spacer(modifier = Modifier.height(12.dp))
+                DueStatusBanner(
+                    dueDate = dueDate,
+                    promisedPaymentDate = promisedPaymentDate,
+                    amount = totalBalance
+                )
+            }
             
             Spacer(modifier = Modifier.height(24.dp))
             
@@ -274,7 +432,7 @@ fun DetailHeader(
             ) {
                 ActionButton(
                     icon = Icons.Outlined.AddCircleOutline,
-                    label = "Add Entry",
+                    label = "Give",
                     modifier = Modifier.weight(1f),
                     color = balanceColor,
                     onClick = { person?.let { onNavigateToAddTransaction(it.personId, "GIVEN", null) } }
@@ -282,7 +440,7 @@ fun DetailHeader(
                 
                 ActionButton(
                     icon = Icons.Outlined.History,
-                    label = "Record Return",
+                    label = "Take",
                     modifier = Modifier.weight(1f),
                     color = balanceColor,
                     onClick = {
@@ -299,7 +457,7 @@ fun DetailHeader(
             ) {
                 ActionButton(
                     icon = Icons.Outlined.CheckCircle,
-                    label = "Settle Full",
+                    label = "Settle",
                     modifier = Modifier.weight(1f),
                     color = balanceColor,
                     onClick = {
@@ -330,6 +488,61 @@ fun DetailHeader(
 }
 
 @Composable
+fun DueStatusBanner(dueDate: Long, promisedPaymentDate: Long?, amount: Double) {
+    val now = System.currentTimeMillis()
+    val isOverdue = dueDate < now
+    val daysOffset = ((kotlin.math.abs(now - dueDate)) / TimeUnit.DAYS.toMillis(1)).coerceAtLeast(0)
+    val dateFormatter = remember { SimpleDateFormat("dd MMM yyyy", Locale.getDefault()) }
+    val containerColor = if (isOverdue) {
+        MaterialTheme.colorScheme.errorContainer
+    } else {
+        MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.7f)
+    }
+    val contentColor = if (isOverdue) {
+        MaterialTheme.colorScheme.onErrorContainer
+    } else {
+        MaterialTheme.colorScheme.onPrimaryContainer
+    }
+
+    Surface(
+        shape = RoundedCornerShape(18.dp),
+        color = containerColor
+    ) {
+        Column(modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp)) {
+            Text(
+                text = if (isOverdue) "Overdue follow-up" else "Upcoming due date",
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.Bold,
+                color = contentColor
+            )
+            Text(
+                text = if (isOverdue) {
+                    "${MoneyFormatter.format(amount, absolute = true)} was due on ${dateFormatter.format(Date(dueDate))}"
+                } else {
+                    "${MoneyFormatter.format(amount, absolute = true)} is due on ${dateFormatter.format(Date(dueDate))}"
+                },
+                style = MaterialTheme.typography.bodySmall,
+                color = contentColor
+            )
+            if (isOverdue) {
+                Text(
+                    text = "Overdue by ${daysOffset} day(s)",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = contentColor
+                )
+            }
+            promisedPaymentDate?.let {
+                Text(
+                    text = "Promised payment: ${dateFormatter.format(Date(it))}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = contentColor
+                )
+            }
+        }
+    }
+}
+
+@Composable
 fun ActionButton(
     icon: ImageVector,
     label: String,
@@ -337,41 +550,39 @@ fun ActionButton(
     color: Color,
     onClick: () -> Unit
 ) {
+    val haptic = LocalHapticFeedback.current
     OutlinedButton(
-        onClick = onClick,
+        onClick = {
+            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+            onClick()
+        },
         modifier = modifier,
-        shape = RoundedCornerShape(12.dp),
-        colors = ButtonDefaults.outlinedButtonColors(contentColor = color),
-        border = androidx.compose.foundation.BorderStroke(1.dp, color.copy(alpha = 0.3f)),
-        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 8.dp)
+        shape = RoundedCornerShape(20.dp),
+        colors = ButtonDefaults.outlinedButtonColors(
+            containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.6f),
+            contentColor = color
+        ),
+        border = androidx.compose.foundation.BorderStroke(1.dp, color.copy(alpha = 0.25f)),
+        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 12.dp)
     ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Icon(icon, contentDescription = null, modifier = Modifier.size(20.dp))
-            Text(label, style = MaterialTheme.typography.labelSmall, maxLines = 1)
+        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Icon(icon, contentDescription = null, modifier = Modifier.size(24.dp))
+            Text(
+                label,
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.Bold,
+                maxLines = 1
+            )
         }
     }
 }
 
 @Composable
 fun EmptyTransactionsState() {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(48.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Icon(
-            imageVector = Icons.AutoMirrored.Filled.ReceiptLong,
-            contentDescription = null,
-            modifier = Modifier.size(64.dp),
-            tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)
-        )
-        Spacer(modifier = Modifier.height(16.dp))
-        Text(
-            "No transactions yet",
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = TextAlign.Center
-        )
-    }
+    PremiumEmptyState(
+        icon = Icons.AutoMirrored.Filled.ReceiptLong,
+        title = "No transactions yet",
+        subtitle = "Every time you lend or borrow money from this contact, it will be listed here.",
+        modifier = Modifier.padding(top = 40.dp)
+    )
 }

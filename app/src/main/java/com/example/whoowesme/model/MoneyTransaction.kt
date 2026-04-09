@@ -4,6 +4,7 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 import androidx.room.ForeignKey
 import androidx.room.Index
+import com.example.whoowesme.model.enums.RecurrenceFrequency
 import com.example.whoowesme.model.enums.TransactionType
 
 @Entity(
@@ -26,6 +27,9 @@ data class MoneyTransaction(
     val amount: Double,
     val date: Long = System.currentTimeMillis(),
     val dueDate: Long? = null,
+    val promisedPaymentDate: Long? = null,
+    val recurrenceFrequency: RecurrenceFrequency = RecurrenceFrequency.NONE,
+    val recurringSeriesId: String? = null,
     val note: String = "",
     val createdAt: Long = System.currentTimeMillis()
 )

@@ -8,8 +8,8 @@ import androidx.core.app.NotificationCompat
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.example.whoowesme.R
-import com.example.whoowesme.database.AppDatabase
 import com.example.whoowesme.model.enums.TransactionType
+import com.example.whoowesme.util.MoneyFormatter
 
 class ReminderWorker(
     context: Context,
@@ -26,9 +26,9 @@ class ReminderWorker(
 
         val type = TransactionType.entries[typeOrdinal]
         val message = if (type == TransactionType.GIVEN) {
-            "Reminder: $personName owes you ₹$amount"
+            "Reminder: $personName owes you ${MoneyFormatter.format(amount)}"
         } else {
-            "Reminder: You owe $personName ₹$amount"
+            "Reminder: You owe $personName ${MoneyFormatter.format(amount)}"
         }
 
         sendNotification(message)

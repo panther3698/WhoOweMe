@@ -3,40 +3,81 @@ package com.example.whoowesme.ui.screens
 import android.provider.ContactsContract
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.outlined.Notes
+import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.ContactPage
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Phone
+import androidx.compose.material.icons.filled.Event
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.Phone
-import androidx.compose.foundation.clickable
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.unit.dp
+import com.example.whoowesme.model.Person
 import com.example.whoowesme.model.enums.TransactionType
+import com.example.whoowesme.ui.theme.BackdropBottomDark
+import com.example.whoowesme.ui.theme.BackdropBottomLight
+import com.example.whoowesme.ui.theme.BackdropTopDark
+import com.example.whoowesme.ui.theme.BackdropTopLight
 import com.example.whoowesme.ui.theme.GreenIncome
-import com.example.whoowesme.ui.theme.RedExpense
-import androidx.compose.foundation.isSystemInDarkTheme
 import com.example.whoowesme.ui.theme.GreenIncomeDark
+import com.example.whoowesme.ui.theme.RedExpense
 import com.example.whoowesme.ui.theme.RedExpenseDark
+import com.example.whoowesme.viewmodel.MainViewModel
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
-import androidx.compose.ui.unit.dp
-import com.example.whoowesme.model.Person
-import com.example.whoowesme.viewmodel.MainViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -46,6 +87,7 @@ fun AddPersonScreen(
     onNavigateBack: () -> Unit
 ) {
     val context = LocalContext.current
+    val haptic = LocalHapticFeedback.current
     var name by remember { mutableStateOf("") }
     var phoneNumber by remember { mutableStateOf("") }
     var notes by remember { mutableStateOf("") }
@@ -56,11 +98,13 @@ fun AddPersonScreen(
     var showDatePicker by remember { mutableStateOf(false) }
     var showDueDatePicker by remember { mutableStateOf(false) }
     var existingPerson by remember { mutableStateOf<Person?>(null) }
-    
+
     val dateFormatter = remember { SimpleDateFormat("dd MMM yyyy", Locale.getDefault()) }
+    val isEditMode = personId != null
+    val isDarkMode by viewModel.isDarkMode.collectAsState()
 
     if (showDatePicker) {
-        val datePickerState = rememberDatePickerState(initialSelectedDateMillis = transactionDate)
+        val datePickerState = androidx.compose.material3.rememberDatePickerState(initialSelectedDateMillis = transactionDate)
         DatePickerDialog(
             onDismissRequest = { showDatePicker = false },
             confirmButton = {
@@ -78,7 +122,7 @@ fun AddPersonScreen(
     }
 
     if (showDueDatePicker) {
-        val dueDatePickerState = rememberDatePickerState(initialSelectedDateMillis = dueDate ?: System.currentTimeMillis())
+        val dueDatePickerState = androidx.compose.material3.rememberDatePickerState(initialSelectedDateMillis = dueDate ?: System.currentTimeMillis())
         DatePickerDialog(
             onDismissRequest = { showDueDatePicker = false },
             confirmButton = {
@@ -97,8 +141,6 @@ fun AddPersonScreen(
             DatePicker(state = dueDatePickerState)
         }
     }
-    
-    val isEditMode = personId != null
 
     val contactPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickContact()
@@ -143,15 +185,21 @@ fun AddPersonScreen(
         }
     }
 
+    val backdrop = if (isDarkMode) {
+        listOf(BackdropTopDark, BackdropBottomDark)
+    } else {
+        listOf(BackdropTopLight, BackdropBottomLight)
+    }
+
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             CenterAlignedTopAppBar(
-                title = { 
+                title = {
                     Text(
-                        if (!isEditMode) "Add New Contact" else "Edit Contact",
+                        if (isEditMode) "Edit Contact" else "Add Contact",
                         fontWeight = FontWeight.Bold
-                    ) 
+                    )
                 },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
@@ -159,208 +207,321 @@ fun AddPersonScreen(
                     }
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background
+                    containerColor = MaterialTheme.colorScheme.background.copy(alpha = 0f)
                 )
             )
         }
     ) { padding ->
-        Column(
+        Box(
             modifier = Modifier
-                .padding(padding)
                 .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(24.dp),
-            verticalArrangement = Arrangement.spacedBy(24.dp)
+                .background(Brush.verticalGradient(backdrop))
         ) {
-            OutlinedTextField(
-                value = name,
-                onValueChange = { name = it },
-                label = { Text("Full Name") },
-                placeholder = { Text("e.g. John Doe") },
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
-                leadingIcon = { Icon(Icons.Outlined.Person, contentDescription = null) },
-                singleLine = true,
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = MaterialTheme.colorScheme.primary,
-                    unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
-                )
-            )
-
-            Button(
-                onClick = { contactPickerLauncher.launch(null) },
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer
-                )
+            Column(
+                modifier = Modifier
+                    .padding(padding)
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(24.dp),
+                verticalArrangement = Arrangement.spacedBy(18.dp)
             ) {
-                Icon(Icons.Default.ContactPage, contentDescription = null)
-                Spacer(modifier = Modifier.width(8.dp))
-                Text("Import from Contacts")
-            }
-
-            OutlinedTextField(
-                value = phoneNumber,
-                onValueChange = { phoneNumber = it },
-                label = { Text("Phone Number") },
-                placeholder = { Text("Optional") },
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
-                leadingIcon = { Icon(Icons.Outlined.Phone, contentDescription = null) },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
-                singleLine = true,
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = MaterialTheme.colorScheme.primary,
-                    unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
-                )
-            )
-
-            OutlinedTextField(
-                value = notes,
-                onValueChange = { notes = it },
-                label = { Text("Notes") },
-                placeholder = { Text("Anything to remember about this person?") },
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
-                leadingIcon = { Icon(Icons.AutoMirrored.Outlined.Notes, contentDescription = null) },
-                minLines = 4,
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = MaterialTheme.colorScheme.primary,
-                    unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
-                )
-            )
-
-            if (!isEditMode) {
-                HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-                
-                Text(
-                    "First Transaction (Optional)",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
-                )
-
-                OutlinedTextField(
-                    value = amount,
-                    onValueChange = { amount = it },
-                    label = { Text("Amount") },
-                    placeholder = { Text("0.00") },
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(16.dp),
-                    prefix = { Text("₹ ") },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                    singleLine = true
-                )
-
-                val isDark = isSystemInDarkTheme()
-                SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
-                    SegmentedButton(
-                        selected = transactionType == TransactionType.GIVEN,
-                        onClick = { transactionType = TransactionType.GIVEN },
-                        shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2),
-                        colors = SegmentedButtonDefaults.colors(
-                            activeContainerColor = if (isDark) GreenIncomeDark.copy(alpha = 0.2f) else GreenIncome.copy(alpha = 0.1f),
-                            activeContentColor = if (isDark) GreenIncomeDark else GreenIncome
-                        )
-                    ) {
-                        Text("I GAVE")
-                    }
-                    SegmentedButton(
-                        selected = transactionType == TransactionType.TAKEN,
-                        onClick = { transactionType = TransactionType.TAKEN },
-                        shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2),
-                        colors = SegmentedButtonDefaults.colors(
-                            activeContainerColor = if (isDark) RedExpenseDark.copy(alpha = 0.2f) else RedExpense.copy(alpha = 0.1f),
-                            activeContentColor = if (isDark) RedExpenseDark else RedExpense
-                        )
-                    ) {
-                        Text("I TOOK")
-                    }
-                }
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                Surface(
+                    shape = RoundedCornerShape(28.dp),
+                    color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.42f)
                 ) {
-                    Box(modifier = Modifier.weight(1f)) {
-                        OutlinedTextField(
-                            value = dateFormatter.format(Date(transactionDate)),
-                            onValueChange = {},
-                            readOnly = true,
-                            label = { Text("Date") },
-                            leadingIcon = { Icon(Icons.Default.CalendarToday, contentDescription = null) },
-                            modifier = Modifier.fillMaxWidth(),
-                            enabled = true,
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = MaterialTheme.colorScheme.primary,
-                                unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
-                                disabledTextColor = MaterialTheme.colorScheme.onSurface,
-                                disabledBorderColor = MaterialTheme.colorScheme.outlineVariant,
-                            ),
-                            shape = RoundedCornerShape(16.dp)
+                    Column(
+                        modifier = Modifier.padding(20.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Surface(
+                            shape = CircleShape,
+                            color = MaterialTheme.colorScheme.surface.copy(alpha = 0.75f)
+                        ) {
+                            Text(
+                                text = if (isEditMode) "Contact profile" else "New person",
+                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        Text(
+                            text = if (isEditMode) "Make this contact instantly recognizable." else "Add someone once and start tracking without friction.",
+                            style = MaterialTheme.typography.headlineSmall,
+                            fontWeight = FontWeight.ExtraBold
                         )
-                        Box(
-                            modifier = Modifier
-                                .matchParentSize()
-                                .clickable { showDatePicker = true }
-                        )
-                    }
-
-                    Box(modifier = Modifier.weight(1f)) {
-                        OutlinedTextField(
-                            value = dueDate?.let { dateFormatter.format(Date(it)) } ?: "Set Due Date",
-                            onValueChange = {},
-                            readOnly = true,
-                            label = { Text("Due Date") },
-                            leadingIcon = { Icon(Icons.Default.Event, contentDescription = null) },
-                            modifier = Modifier.fillMaxWidth(),
-                            enabled = true,
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = MaterialTheme.colorScheme.primary,
-                                unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
-                                disabledTextColor = if (dueDate != null) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
-                                disabledBorderColor = MaterialTheme.colorScheme.outlineVariant,
-                            ),
-                            shape = RoundedCornerShape(16.dp)
-                        )
-                        Box(
-                            modifier = Modifier
-                                .matchParentSize()
-                                .clickable { showDueDatePicker = true }
+                        Text(
+                            text = "Keep the basics light, and only add an opening balance if you need it.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
-            }
 
-            Spacer(modifier = Modifier.weight(1f))
+                PremiumFormSection(
+                    title = "Contact Details",
+                    subtitle = "The essentials you’ll use every time."
+                ) {
+                    OutlinedTextField(
+                        value = name,
+                        onValueChange = { name = it },
+                        label = { Text("Full Name") },
+                        placeholder = { Text("e.g. John Doe") },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(18.dp),
+                        leadingIcon = { Icon(Icons.Outlined.Person, contentDescription = null) },
+                        singleLine = true,
+                        colors = premiumFieldColors()
+                    )
 
-            Button(
-                onClick = {
-                    if (name.isNotBlank()) {
-                        if (personId == null) {
-                            val initialAmount = amount.toDoubleOrNull() ?: 0.0
-                            viewModel.addPerson(name, phoneNumber, notes, initialAmount, transactionType, dueDate, transactionDate)
-                        } else {
-                            existingPerson?.let {
-                                viewModel.updatePerson(it.copy(name = name, phoneNumber = phoneNumber, notes = notes))
+                    OutlinedButton(
+                        onClick = {
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                            contactPickerLauncher.launch(null)
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(18.dp),
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.45f),
+                            contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                        )
+                    ) {
+                        Icon(Icons.Default.ContactPage, contentDescription = null)
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Text("Import from Contacts", fontWeight = FontWeight.SemiBold)
+                    }
+
+                    OutlinedTextField(
+                        value = phoneNumber,
+                        onValueChange = { phoneNumber = it },
+                        label = { Text("Phone Number") },
+                        placeholder = { Text("Optional") },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(18.dp),
+                        leadingIcon = { Icon(Icons.Outlined.Phone, contentDescription = null) },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+                        singleLine = true,
+                        colors = premiumFieldColors()
+                    )
+
+                    OutlinedTextField(
+                        value = notes,
+                        onValueChange = { notes = it },
+                        label = { Text("Notes") },
+                        placeholder = { Text("Anything useful to remember?") },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(18.dp),
+                        leadingIcon = {
+                            Icon(
+                                Icons.AutoMirrored.Outlined.Notes,
+                                contentDescription = null
+                            )
+                        },
+                        minLines = 4,
+                        colors = premiumFieldColors()
+                    )
+                }
+
+                if (!isEditMode) {
+                    PremiumFormSection(
+                        title = "Opening Balance",
+                        subtitle = "Optional, for debts that already exist before adding this contact."
+                    ) {
+                        OutlinedTextField(
+                            value = amount,
+                            onValueChange = { amount = it },
+                            label = { Text("Amount") },
+                            placeholder = { Text("0.00") },
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(18.dp),
+                            prefix = { Text("\u20B9 ", fontWeight = FontWeight.Bold) },
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                            singleLine = true,
+                            colors = premiumFieldColors()
+                        )
+
+                        SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
+                            SegmentedButton(
+                                selected = transactionType == TransactionType.GIVEN,
+                                onClick = {
+                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                    transactionType = TransactionType.GIVEN
+                                },
+                                shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2),
+                                colors = SegmentedButtonDefaults.colors(
+                                    activeContainerColor = if (isDarkMode) GreenIncomeDark.copy(
+                                        alpha = 0.22f
+                                    ) else GreenIncome.copy(alpha = 0.12f),
+                                    activeContentColor = if (isDarkMode) GreenIncomeDark else GreenIncome
+                                )
+                            ) {
+                                Text("I GAVE", fontWeight = FontWeight.Bold)
+                            }
+                            SegmentedButton(
+                                selected = transactionType == TransactionType.TAKEN,
+                                onClick = {
+                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                    transactionType = TransactionType.TAKEN
+                                },
+                                shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2),
+                                colors = SegmentedButtonDefaults.colors(
+                                    activeContainerColor = if (isDarkMode) RedExpenseDark.copy(
+                                        alpha = 0.22f
+                                    ) else RedExpense.copy(alpha = 0.12f),
+                                    activeContentColor = if (isDarkMode) RedExpenseDark else RedExpense
+                                )
+                            ) {
+                                Text("I TOOK", fontWeight = FontWeight.Bold)
                             }
                         }
-                        onNavigateBack()
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            Box(modifier = Modifier.weight(1f)) {
+                                OutlinedTextField(
+                                    value = dateFormatter.format(Date(transactionDate)),
+                                    onValueChange = {},
+                                    readOnly = true,
+                                    label = { Text("Date") },
+                                    leadingIcon = {
+                                        Icon(
+                                            Icons.Default.CalendarToday,
+                                            contentDescription = null
+                                        )
+                                    },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    enabled = true,
+                                    colors = premiumFieldColors(),
+                                    shape = RoundedCornerShape(18.dp)
+                                )
+                                Box(
+                                    modifier = Modifier
+                                        .matchParentSize()
+                                        .clickable {
+                                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                            showDatePicker = true
+                                        }
+                                )
+                            }
+
+                            Box(modifier = Modifier.weight(1f)) {
+                                OutlinedTextField(
+                                    value = dueDate?.let { dateFormatter.format(Date(it)) }
+                                        ?: "Set Due Date",
+                                    onValueChange = {},
+                                    readOnly = true,
+                                    label = { Text("Due Date") },
+                                    leadingIcon = {
+                                        Icon(
+                                            Icons.Default.Event,
+                                            contentDescription = null
+                                        )
+                                    },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    enabled = true,
+                                    colors = premiumFieldColors(),
+                                    shape = RoundedCornerShape(18.dp)
+                                )
+                                Box(
+                                    modifier = Modifier
+                                        .matchParentSize()
+                                        .clickable {
+                                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                            showDueDatePicker = true
+                                        }
+                                )
+                            }
+                        }
                     }
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp),
-                shape = RoundedCornerShape(16.dp),
-                enabled = name.isNotBlank()
-            ) {
-                Text(
-                    if (!isEditMode) "Save Contact" else "Update Contact",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
-                )
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Button(
+                    onClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        if (name.isNotBlank()) {
+                            if (personId == null) {
+                                val initialAmount = amount.toDoubleOrNull() ?: 0.0
+                                viewModel.addPerson(
+                                    name,
+                                    phoneNumber,
+                                    notes,
+                                    initialAmount,
+                                    transactionType,
+                                    dueDate,
+                                    transactionDate
+                                )
+                            } else {
+                                existingPerson?.let {
+                                    viewModel.updatePerson(
+                                        it.copy(
+                                            name = name,
+                                            phoneNumber = phoneNumber,
+                                            notes = notes
+                                        )
+                                    )
+                                }
+                            }
+                            onNavigateBack()
+                        }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(58.dp),
+                    shape = RoundedCornerShape(26.dp),
+                    enabled = name.isNotBlank()
+                ) {
+                    Text(
+                        if (isEditMode) "Update Contact" else "Save Contact",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
             }
         }
     }
 }
+
+@Composable
+private fun PremiumFormSection(
+    title: String,
+    subtitle: String,
+    content: @Composable ColumnScope.() -> Unit
+) {
+    Surface(
+        shape = RoundedCornerShape(26.dp),
+        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.92f),
+        tonalElevation = 0.dp,
+        shadowElevation = 1.dp
+    ) {
+        Column(
+            modifier = Modifier.padding(20.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp)
+        ) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                text = subtitle,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            content()
+        }
+    }
+}
+
+@Composable
+private fun premiumFieldColors() = OutlinedTextFieldDefaults.colors(
+    focusedBorderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.55f),
+    unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f),
+    focusedContainerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.5f),
+    unfocusedContainerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.35f),
+    disabledTextColor = MaterialTheme.colorScheme.onSurface,
+    disabledBorderColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f)
+)

@@ -5,6 +5,10 @@ A modern, privacy-focused Android application built with Jetpack Compose to help
 ## 🚀 Features
 
 - **Transaction Tracking**: Easily record when you give money ("Gave") or receive a repayment ("Took").
+- **Haptic Feedback**: Tactile interaction system with long-press sensations for primary buttons, chips, and list items.
+- **Motion Transitions**: Fluid slide-and-fade navigation transitions (400ms) for a premium feel.
+- **Data Visualization**: High-level overview of cash flow distribution via a custom trend bar on the Dashboard.
+- **Refined Empty States**: Informative and visually appealing states when no contacts or transactions exist.
 - **PDF Statements**: Generate professional transaction reports for any contact and share them instantly via WhatsApp, Email, or other platforms.
 - **Direct WhatsApp Reminders**: Send quick, pre-filled repayment reminders directly to WhatsApp without annoying browser redirects.
 - **Smart Search & Filters**: Find specific entries by name, note, or exact amount. Filter history by transaction type to see your cash flow clearly.
@@ -15,13 +19,21 @@ A modern, privacy-focused Android application built with Jetpack Compose to help
 
 ## 🛠 Tech Stack
 
-- **UI**: Jetpack Compose with Material 3
+- **UI**: Jetpack Compose with Material 3 & Custom Canvas Drawing
+- **Navigation**: Compose Navigation with `AnimatedContentTransitionScope`
 - **Language**: Kotlin
 - **Database**: Room Persistence Library
 - **Asynchronous Work**: Kotlin Coroutines & Flow
 - **Background Tasks**: WorkManager (for reminders and sync)
 - **PDF Generation**: iText7
 - **Architecture**: MVVM (Model-View-ViewModel)
+
+## 📖 Documentation
+
+- **Premium UX Guide**: The app follows a high-fidelity design language using custom `Canvas` for data visualization and `AnimatedContent` for navigation.
+- **Tactile Feedback**: Interactive elements use `HapticFeedbackType.LongPress` to provide physical confirmation of user actions.
+- **Safety & Privacy**: All calculations and data storage are performed locally. Biometric App Lock is available in Settings for added security.
+- **Data Portability**: Users can export full PDF statements or perform SQLite database backups to ensure data longevity.
 
 ## 📸 Screen Guide
 

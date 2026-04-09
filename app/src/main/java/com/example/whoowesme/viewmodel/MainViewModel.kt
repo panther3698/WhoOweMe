@@ -9,17 +9,23 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import androidx.work.*
 import com.example.whoowesme.data.SettingsManager
+import com.example.whoowesme.model.PersonDueStatus
 import com.example.whoowesme.repository.AppRepository
 import com.example.whoowesme.model.Person
+import com.example.whoowesme.model.ReminderTone
 import com.example.whoowesme.model.MoneyTransaction
 import com.example.whoowesme.model.PersonWithBalance
+import com.example.whoowesme.model.enums.RecurrenceFrequency
 import com.example.whoowesme.model.enums.TransactionType
+import com.example.whoowesme.util.MoneyFormatter
 import com.example.whoowesme.worker.ReminderWorker
 import com.example.whoowesme.worker.SyncWorker
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.TimeUnit
+import kotlin.math.abs
 
 data class DashboardStats(
     val totalReceivable: Double = 0.0,
@@ -32,6 +38,11 @@ class MainViewModel(
     private val workManager: WorkManager,
     private val settingsManager: SettingsManager
 ) : ViewModel() {
+    init {
+        viewModelScope.launch {
+            refreshReminders()
+        }
+    }
 
     val isDarkMode: StateFlow<Boolean> = settingsManager.isDarkMode
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
@@ -42,16 +53,26 @@ class MainViewModel(
     val onboardingCompleted: StateFlow<Boolean> = settingsManager.onboardingCompleted
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 
+    val appLockEnabled: StateFlow<Boolean> = settingsManager.appLockEnabled
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+
     fun setDarkMode(enabled: Boolean) {
         viewModelScope.launch { settingsManager.setDarkMode(enabled) }
     }
 
     fun setRemindersEnabled(enabled: Boolean) {
-        viewModelScope.launch { settingsManager.setRemindersEnabled(enabled) }
+        viewModelScope.launch {
+            settingsManager.setRemindersEnabled(enabled)
+            refreshReminders()
+        }
     }
 
     fun setOnboardingCompleted(completed: Boolean) {
         viewModelScope.launch { settingsManager.setOnboardingCompleted(completed) }
+    }
+
+    fun setAppLockEnabled(enabled: Boolean) {
+        viewModelScope.launch { settingsManager.setAppLockEnabled(enabled) }
     }
 
     val peopleWithBalance: Flow<List<PersonWithBalance>> = combine(
@@ -75,6 +96,43 @@ class MainViewModel(
 
     val allPeople: Flow<List<Person>> = repository.allPeople
 
+    val dueStatuses: Flow<List<PersonDueStatus>> = combine(
+        repository.allPeople,
+        repository.allTransactions
+    ) { people, transactions ->
+        val now = System.currentTimeMillis()
+        people.mapNotNull { person ->
+            val personTransactions = transactions.filter { it.personId == person.personId }
+            val balance = personTransactions.sumOf {
+                if (it.type == TransactionType.GIVEN) it.amount else -it.amount
+            }
+            val dueDate = personTransactions
+                .filter { it.type == TransactionType.GIVEN }
+                .mapNotNull { it.dueDate }
+                .minOrNull()
+            val promisedPaymentDate = personTransactions
+                .filter { it.type == TransactionType.GIVEN }
+                .mapNotNull { it.promisedPaymentDate }
+                .maxOrNull()
+
+            if (balance > 0 && dueDate != null) {
+                val millisPerDay = TimeUnit.DAYS.toMillis(1)
+                val dayDiff = (abs(now - dueDate) / millisPerDay).coerceAtLeast(0)
+                PersonDueStatus(
+                    person = person,
+                    balance = balance,
+                    dueDate = dueDate,
+                    promisedPaymentDate = promisedPaymentDate,
+                    isOverdue = dueDate < now,
+                    isPromiseMissed = promisedPaymentDate?.let { it < now } == true,
+                    daysOffset = dayDiff
+                )
+            } else {
+                null
+            }
+        }.sortedWith(compareByDescending<PersonDueStatus> { it.isOverdue }.thenBy { it.dueDate })
+    }
+
     fun getTransactionsForPerson(personId: Long): Flow<List<MoneyTransaction>> =
         repository.getTransactionsForPerson(personId)
 
@@ -82,9 +140,19 @@ class MainViewModel(
         viewModelScope.launch {
             val personId = repository.insertPerson(Person(name = name, phoneNumber = phoneNumber, notes = notes))
             if (initialAmount > 0) {
-                addTransaction(personId, initialAmount, initialType, "Initial transaction", date = initialDate, dueDate = initialDueDate)
+                repository.insertTransaction(
+                    MoneyTransaction(
+                        personId = personId,
+                        amount = initialAmount,
+                        type = initialType,
+                        note = "Initial transaction",
+                        date = initialDate,
+                        dueDate = initialDueDate
+                    )
+                )
             }
             triggerSync()
+            refreshReminders()
         }
     }
 
@@ -92,6 +160,7 @@ class MainViewModel(
         viewModelScope.launch {
             repository.updatePerson(person)
             triggerSync()
+            refreshReminders()
         }
     }
 
@@ -99,19 +168,37 @@ class MainViewModel(
         viewModelScope.launch {
             repository.deletePerson(person)
             triggerSync()
+            refreshReminders()
         }
     }
 
-    fun addTransaction(personId: Long, amount: Double, type: TransactionType, note: String = "", date: Long = System.currentTimeMillis(), dueDate: Long? = null) {
+    fun addTransaction(
+        personId: Long,
+        amount: Double,
+        type: TransactionType,
+        note: String = "",
+        date: Long = System.currentTimeMillis(),
+        dueDate: Long? = null,
+        promisedPaymentDate: Long? = null,
+        recurrenceFrequency: RecurrenceFrequency = RecurrenceFrequency.NONE,
+        recurringSeriesId: String? = null
+    ) {
         viewModelScope.launch {
             repository.insertTransaction(
-                MoneyTransaction(personId = personId, amount = amount, type = type, note = note, date = date, dueDate = dueDate)
+                MoneyTransaction(
+                    personId = personId,
+                    amount = amount,
+                    type = type,
+                    note = note,
+                    date = date,
+                    dueDate = dueDate,
+                    promisedPaymentDate = promisedPaymentDate,
+                    recurrenceFrequency = recurrenceFrequency,
+                    recurringSeriesId = recurringSeriesId ?: if (recurrenceFrequency != RecurrenceFrequency.NONE) UUID.randomUUID().toString() else null
+                )
             )
-            
-            if (dueDate != null) {
-                scheduleReminder(personId, amount, type, dueDate)
-            }
             triggerSync()
+            refreshReminders()
         }
     }
 
@@ -122,42 +209,74 @@ class MainViewModel(
         workManager.enqueueUniqueWork("cloud_sync", ExistingWorkPolicy.REPLACE, syncRequest)
     }
 
-    private fun scheduleReminder(personId: Long, amount: Double, type: TransactionType, dueDate: Long) {
-        viewModelScope.launch {
-            val p = repository.getPersonById(personId)
-            if (p != null) {
-                val delay = dueDate - System.currentTimeMillis()
-                if (delay > 0) {
-                    val data = workDataOf(
-                        "personId" to personId,
-                        "personName" to p.name,
-                        "amount" to amount,
-                        "type" to type.ordinal
-                    )
+    private suspend fun refreshReminders() {
+        workManager.cancelAllWorkByTag(REMINDER_WORK_TAG)
 
-                    val reminderRequest = OneTimeWorkRequestBuilder<ReminderWorker>()
-                        .setInitialDelay(delay, TimeUnit.MILLISECONDS)
-                        .setInputData(data)
-                        .addTag("reminder_$personId")
-                        .build()
+        if (!settingsManager.remindersEnabled.first()) {
+            return
+        }
 
-                    workManager.enqueueUniqueWork(
-                        "reminder_tx_${System.currentTimeMillis()}",
-                        ExistingWorkPolicy.REPLACE,
-                        reminderRequest
-                    )
-                }
+        val people = repository.allPeople.first()
+        val transactions = repository.allTransactions.first()
+        val now = System.currentTimeMillis()
+
+        people.forEach { person ->
+            val personTransactions = transactions.filter { it.personId == person.personId }
+            val balance = personTransactions.sumOf {
+                if (it.type == TransactionType.GIVEN) it.amount else -it.amount
+            }
+            val dueDate = personTransactions
+                .filter { it.type == TransactionType.GIVEN }
+                .mapNotNull { it.dueDate }
+                .minOrNull()
+
+            if (balance > 0 && dueDate != null && dueDate > now) {
+                scheduleReminder(person, balance, dueDate)
             }
         }
     }
 
-    fun sendManualReminder(context: Context, person: Person, balance: Double) {
-        val message = if (balance > 0) {
-            "Hi ${person.name}, a friendly reminder that you owe me ₹ ${String.format(Locale.getDefault(), "%,.2f", balance)}. Please clear it when possible. Thanks!"
-        } else if (balance < 0) {
-            "Hi ${person.name}, I wanted to let you know that I owe you ₹ ${String.format(Locale.getDefault(), "%,.2f", Math.abs(balance))}. I'll pay you back soon!"
-        } else {
-            return // Nothing to remind about
+    private fun scheduleReminder(person: Person, amount: Double, dueDate: Long) {
+        val delay = dueDate - System.currentTimeMillis()
+        if (delay <= 0) {
+            return
+        }
+
+        val data = workDataOf(
+            "personId" to person.personId,
+            "personName" to person.name,
+            "amount" to amount,
+            "type" to TransactionType.GIVEN.ordinal
+        )
+
+        val reminderRequest = OneTimeWorkRequestBuilder<ReminderWorker>()
+            .setInitialDelay(delay, TimeUnit.MILLISECONDS)
+            .setInputData(data)
+            .addTag(REMINDER_WORK_TAG)
+            .build()
+
+        workManager.enqueueUniqueWork(
+            reminderWorkName(person.personId),
+            ExistingWorkPolicy.REPLACE,
+            reminderRequest
+        )
+    }
+
+    fun sendManualReminder(
+        context: Context,
+        person: Person,
+        balance: Double,
+        tone: ReminderTone = ReminderTone.GENTLE,
+        dueDate: Long? = null
+    ) {
+        val amountText = MoneyFormatter.format(balance, absolute = true)
+        val dueDateText = dueDate?.let {
+            SimpleDateFormat("dd MMM yyyy", Locale.getDefault()).format(Date(it))
+        }
+        val message = when {
+            balance > 0 -> buildReceivableReminder(person.name, amountText, tone, dueDateText)
+            balance < 0 -> "Hi ${person.name}, I still owe you $amountText. I'll settle it soon."
+            else -> return
         }
 
         // Sanitize phone number: keep only digits
@@ -196,6 +315,7 @@ class MainViewModel(
         viewModelScope.launch {
             repository.deleteTransaction(transaction)
             triggerSync()
+            refreshReminders()
         }
     }
 
@@ -203,12 +323,84 @@ class MainViewModel(
         viewModelScope.launch {
             repository.updateTransaction(transaction)
             triggerSync()
+            refreshReminders()
+        }
+    }
+
+    fun createNextRecurringTransaction(transaction: MoneyTransaction) {
+        if (transaction.recurrenceFrequency == RecurrenceFrequency.NONE) return
+
+        viewModelScope.launch {
+            val seriesId = transaction.recurringSeriesId ?: UUID.randomUUID().toString()
+            val seriesTransactions = repository.allTransactions.first()
+                .filter { it.recurringSeriesId == seriesId }
+            val latestTransaction = (seriesTransactions + transaction).maxByOrNull { it.date } ?: transaction
+            val nextDate = calculateNextRecurringDate(
+                fromDate = latestTransaction.date,
+                frequency = latestTransaction.recurrenceFrequency
+            ) ?: return@launch
+
+            val duplicateExists = seriesTransactions.any { it.date == nextDate }
+            if (duplicateExists) return@launch
+
+            val dueOffset = latestTransaction.dueDate?.let { it - latestTransaction.date }
+            val promisedOffset = latestTransaction.promisedPaymentDate?.let { it - latestTransaction.date }
+
+            repository.insertTransaction(
+                latestTransaction.copy(
+                    transactionId = 0,
+                    date = nextDate,
+                    dueDate = dueOffset?.let { nextDate + it },
+                    promisedPaymentDate = promisedOffset?.let { nextDate + it },
+                    createdAt = System.currentTimeMillis(),
+                    recurringSeriesId = seriesId
+                )
+            )
+
+            triggerSync()
+            refreshReminders()
         }
     }
 
     suspend fun getPersonById(personId: Long): Person? = repository.getPersonById(personId)
 
     suspend fun getTransactionById(transactionId: Long): MoneyTransaction? = repository.getTransactionById(transactionId)
+
+    private fun buildReceivableReminder(
+        personName: String,
+        amountText: String,
+        tone: ReminderTone,
+        dueDateText: String?
+    ): String {
+        val dueLine = dueDateText?.let { " It was due on $it." } ?: ""
+        return when (tone) {
+            ReminderTone.GENTLE ->
+                "Hi $personName, just a gentle reminder that $amountText is still pending.$dueLine Please send it when you get a chance. Thank you."
+            ReminderTone.DIRECT ->
+                "Hi $personName, this is a reminder that $amountText is pending.$dueLine Please let me know when I can expect the payment."
+            ReminderTone.URGENT ->
+                "Hi $personName, $amountText is still overdue.$dueLine Please clear it as soon as possible or share a concrete payment date today."
+        }
+    }
+
+    companion object {
+        private const val REMINDER_WORK_TAG = "reminder_work"
+
+        private fun reminderWorkName(personId: Long): String = "reminder_person_$personId"
+    }
+
+    private fun calculateNextRecurringDate(
+        fromDate: Long,
+        frequency: RecurrenceFrequency
+    ): Long? {
+        val calendar = Calendar.getInstance().apply { timeInMillis = fromDate }
+        when (frequency) {
+            RecurrenceFrequency.NONE -> return null
+            RecurrenceFrequency.WEEKLY -> calendar.add(Calendar.DAY_OF_YEAR, 7)
+            RecurrenceFrequency.MONTHLY -> calendar.add(Calendar.MONTH, 1)
+        }
+        return calendar.timeInMillis
+    }
 }
 
 class MainViewModelFactory(

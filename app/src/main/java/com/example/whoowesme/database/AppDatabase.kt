@@ -10,13 +10,15 @@ import com.example.whoowesme.database.dao.MoneyTransactionDao
 import com.example.whoowesme.model.Person
 import com.example.whoowesme.model.MoneyTransaction
 
-@Database(entities = [Person::class, MoneyTransaction::class], version = 5, exportSchema = false)
+@Database(entities = [Person::class, MoneyTransaction::class], version = 6, exportSchema = false)
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun personDao(): PersonDao
     abstract fun transactionDao(): MoneyTransactionDao
 
     companion object {
+        const val DATABASE_NAME = "who_owes_me_database"
+
         @Volatile
         private var INSTANCE: AppDatabase? = null
 
@@ -25,13 +27,18 @@ abstract class AppDatabase : RoomDatabase() {
                 val instance = Room.databaseBuilder(
                     context.applicationContext,
                     AppDatabase::class.java,
-                    "who_owes_me_database"
+                    DATABASE_NAME
                 )
                 .fallbackToDestructiveMigration(true)
                 .build()
                 INSTANCE = instance
                 instance
             }
+        }
+
+        fun closeDatabase() {
+            INSTANCE?.close()
+            INSTANCE = null
         }
     }
 }

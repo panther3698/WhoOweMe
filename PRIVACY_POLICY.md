@@ -26,4 +26,4 @@ We value your trust in tracking your personal financial data. Because the app op
 We may update our Privacy Policy from time to time. Thus, you are advised to review this page periodically for any changes. 
 
 ### 6. Contact Us
-If you have any questions, concerns, or suggestions about our Privacy Policy, do not hesitate to contact us.
+If you have any questions, concerns, or suggestions about our Privacy Policy, do not hesitate to contact us at **devchiradhi@gmail.com**.

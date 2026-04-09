@@ -1,26 +1,32 @@
 package com.example.whoowesme.ui.screens
 
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ChevronRight
-import androidx.compose.material.icons.filled.Group
-import androidx.compose.material.icons.filled.NotificationsActive
-import androidx.compose.material.icons.filled.AccountBalanceWallet
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.whoowesme.ui.theme.BackdropBottomDark
+import com.example.whoowesme.ui.theme.BackdropBottomLight
+import com.example.whoowesme.ui.theme.BackdropTopDark
+import com.example.whoowesme.ui.theme.BackdropTopLight
 import com.example.whoowesme.viewmodel.MainViewModel
 import kotlinx.coroutines.launch
 
@@ -37,22 +43,23 @@ fun OnboardingScreen(
     viewModel: MainViewModel,
     onFinished: () -> Unit
 ) {
+    val isDarkMode by viewModel.isDarkMode.collectAsState(initial = false)
     val pages = listOf(
         OnboardingPage(
             "Track Debts Easily",
-            "Keep a clear record of who owes you and who you owe, all in one place.",
+            "Keep a clear record of who owes you and who you owe, all in one place. No more awkward 'who paid what' moments.",
             Icons.Default.AccountBalanceWallet,
             MaterialTheme.colorScheme.primary
         ),
         OnboardingPage(
             "Manage Contacts",
-            "Organize transactions by person. See individual balances at a glance.",
+            "Organize transactions by person. See individual balances at a glance with high-contrast visuals.",
             Icons.Default.Group,
             MaterialTheme.colorScheme.secondary
         ),
         OnboardingPage(
-            "Smart Reminders",
-            "Never forget a payment. Set due dates and send professional WhatsApp reminders.",
+            "Professional Reports",
+            "Generate elegant PDF statements and send polite reminders via WhatsApp with a single tap.",
             Icons.Default.NotificationsActive,
             MaterialTheme.colorScheme.tertiary
         )
@@ -61,107 +68,140 @@ fun OnboardingScreen(
     val pagerState = rememberPagerState(pageCount = { pages.size })
     val scope = rememberCoroutineScope()
 
-    Column(
+    val backdrop = if (isDarkMode) {
+        listOf(BackdropTopDark, BackdropBottomDark)
+    } else {
+        listOf(BackdropTopLight, BackdropBottomLight)
+    }
+
+    Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
+            .background(Brush.verticalGradient(backdrop))
     ) {
-        HorizontalPager(
-            state = pagerState,
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxWidth()
-        ) { position ->
-            val page = pages[position]
-            Column(
+        Column(modifier = Modifier.fillMaxSize()) {
+            HorizontalPager(
+                state = pagerState,
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(32.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) {
-                Box(
+                    .weight(1f)
+                    .fillMaxWidth()
+            ) { position ->
+                val page = pages[position]
+                Column(
                     modifier = Modifier
-                        .size(200.dp)
-                        .clip(CircleShape)
-                        .background(page.color.copy(alpha = 0.1f)),
-                    contentAlignment = Alignment.Center
+                        .fillMaxSize()
+                        .padding(horizontal = 40.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
                 ) {
-                    Icon(
-                        imageVector = page.icon,
-                        contentDescription = null,
-                        modifier = Modifier.size(100.dp),
-                        tint = page.color
-                    )
-                }
-                
-                Spacer(modifier = Modifier.height(48.dp))
-                
-                Text(
-                    text = page.title,
-                    style = MaterialTheme.typography.headlineMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onBackground,
-                    textAlign = TextAlign.Center
-                )
-                
-                Spacer(modifier = Modifier.height(16.dp))
-                
-                Text(
-                    text = page.description,
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.padding(horizontal = 16.dp)
-                )
-            }
-        }
-
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(32.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            // Indicators
-            Row {
-                repeat(pages.size) { iteration ->
-                    val color = if (pagerState.currentPage == iteration) 
-                        MaterialTheme.colorScheme.primary 
-                    else 
-                        MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
-                    
-                    Box(
+                    Surface(
                         modifier = Modifier
-                            .padding(2.dp)
-                            .clip(CircleShape)
-                            .background(color)
-                            .size(10.dp)
+                            .size(240.dp),
+                        shape = CircleShape,
+                        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.5f),
+                        tonalElevation = 2.dp
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Box(
+                                modifier = Modifier
+                                    .size(160.dp)
+                                    .clip(CircleShape)
+                                    .background(page.color.copy(alpha = 0.12f)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = page.icon,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(80.dp),
+                                    tint = page.color
+                                )
+                            }
+                        }
+                    }
+                    
+                    Spacer(modifier = Modifier.height(64.dp))
+                    
+                    Text(
+                        text = page.title,
+                        style = MaterialTheme.typography.displaySmall,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        textAlign = TextAlign.Center
+                    )
+                    
+                    Spacer(modifier = Modifier.height(16.dp))
+                    
+                    Text(
+                        text = page.description,
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = TextAlign.Center,
+                        lineHeight = 24.sp
                     )
                 }
             }
 
-            // Button
-            Button(
-                onClick = {
-                    if (pagerState.currentPage < pages.size - 1) {
-                        scope.launch {
-                            pagerState.animateScrollToPage(pagerState.currentPage + 1)
-                        }
-                    } else {
-                        viewModel.setOnboardingCompleted(true)
-                        onFinished()
-                    }
-                },
-                shape = CircleShape,
-                modifier = Modifier.size(64.dp),
-                contentPadding = PaddingValues(0.dp)
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 32.dp, vertical = 48.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(
-                    imageVector = Icons.Default.ChevronRight,
-                    contentDescription = if (pagerState.currentPage == pages.size - 1) "Finish" else "Next"
-                )
+                // Indicators
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    repeat(pages.size) { iteration ->
+                        val active = pagerState.currentPage == iteration
+                        val width by animateDpAsState(targetValue = if (active) 24.dp else 8.dp, label = "width")
+                        
+                        Box(
+                            modifier = Modifier
+                                .clip(CircleShape)
+                                .background(
+                                    if (active) MaterialTheme.colorScheme.primary 
+                                    else MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
+                                )
+                                .height(8.dp)
+                                .width(width)
+                        )
+                    }
+                }
+
+                // Button
+                Button(
+                    onClick = {
+                        if (pagerState.currentPage < pages.size - 1) {
+                            scope.launch {
+                                pagerState.animateScrollToPage(pagerState.currentPage + 1)
+                            }
+                        } else {
+                            viewModel.setOnboardingCompleted(true)
+                            onFinished()
+                        }
+                    },
+                    shape = CircleShape,
+                    modifier = Modifier.height(58.dp),
+                    contentPadding = PaddingValues(horizontal = 28.dp)
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Text(
+                            text = if (pagerState.currentPage == pages.size - 1) "Get Started" else "Next",
+                            fontWeight = FontWeight.Bold,
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                            contentDescription = null,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                }
             }
         }
     }

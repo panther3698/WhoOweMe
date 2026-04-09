@@ -13,3 +13,7 @@
 .externalNativeBuild
 .cxx
 local.properties
+.gradle-user-home/
+.local/
+emulator-screen*.png
+whoowesme-ui.xml
