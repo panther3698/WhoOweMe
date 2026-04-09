@@ -38,6 +38,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.res.stringResource
+import com.example.whoowesme.R
 import com.example.whoowesme.model.PersonDueStatus
 import com.example.whoowesme.model.PersonWithBalance
 import com.example.whoowesme.ui.theme.BackdropBottomDark
@@ -79,8 +81,8 @@ fun DashboardScreen(
                 showDeleteConfirm = false 
                 personToDelete = null
             },
-            title = { Text("Delete Contact") },
-            text = { Text("Are you sure you want to delete ${personToDelete?.person?.name}? This will also delete all associated transactions.") },
+            title = { Text(stringResource(R.string.delete_contact_title)) },
+            text = { Text(stringResource(R.string.delete_contact_msg, personToDelete?.person?.name ?: "")) },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -90,7 +92,7 @@ fun DashboardScreen(
                     },
                     colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
                 ) {
-                    Text("Delete")
+                    Text(stringResource(R.string.delete_confirm))
                 }
             },
             dismissButton = {
@@ -98,7 +100,7 @@ fun DashboardScreen(
                     showDeleteConfirm = false
                     personToDelete = null
                 }) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.cancel))
                 }
             }
         )
@@ -123,19 +125,19 @@ fun DashboardScreen(
                     selected = true,
                     onClick = { },
                     icon = { Icon(Icons.Outlined.AccountBalanceWallet, contentDescription = null) },
-                    label = { Text("Dashboard") }
+                    label = { Text(stringResource(R.string.nav_dashboard)) }
                 )
                 NavigationBarItem(
                     selected = false,
                     onClick = onNavigateToHistory,
                     icon = { Icon(Icons.Outlined.History, contentDescription = null) },
-                    label = { Text("History") }
+                    label = { Text(stringResource(R.string.nav_history)) }
                 )
                 NavigationBarItem(
                     selected = false,
                     onClick = onNavigateToSettings,
                     icon = { Icon(Icons.Outlined.Settings, contentDescription = null) },
-                    label = { Text("Settings") }
+                    label = { Text(stringResource(R.string.nav_settings)) }
                 )
             }
         },
@@ -147,7 +149,7 @@ fun DashboardScreen(
                 shape = CircleShape,
                 modifier = Modifier.padding(bottom = 16.dp)
             ) {
-                Icon(Icons.Default.Add, contentDescription = "Add Person")
+                Icon(Icons.Default.Add, contentDescription = stringResource(R.string.dashboard_add_person_content_desc))
             }
         }
     ) { padding ->
@@ -184,7 +186,7 @@ fun DashboardScreen(
                                 color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.65f)
                             ) {
                                 Text(
-                                    text = "Simple debt tracking",
+                                    text = stringResource(R.string.dashboard_tagline),
                                     modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
                                     style = MaterialTheme.typography.labelMedium,
                                     fontWeight = FontWeight.Bold,
@@ -192,13 +194,13 @@ fun DashboardScreen(
                                 )
                             }
                             Text(
-                                text = "Who Owes Me",
+                                text = stringResource(R.string.dashboard_title),
                                 style = MaterialTheme.typography.headlineLarge,
                                 fontWeight = FontWeight.Black,
                                 color = MaterialTheme.colorScheme.onSurface
                             )
                             Text(
-                                text = "Track dues and follow up.",
+                                text = stringResource(R.string.dashboard_subtitle),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -211,7 +213,7 @@ fun DashboardScreen(
                                 .clip(CircleShape)
                                 .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.9f))
                         ) {
-                            Icon(Icons.Outlined.Settings, contentDescription = "Settings")
+                            Icon(Icons.Outlined.Settings, contentDescription = stringResource(R.string.dashboard_settings_content_desc))
                         }
                     }
                 }
@@ -238,7 +240,7 @@ fun DashboardScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = "Contacts",
+                                text = stringResource(R.string.contacts_header),
                                 style = MaterialTheme.typography.titleLarge,
                                 fontWeight = FontWeight.Bold
                             )
@@ -266,7 +268,7 @@ fun DashboardScreen(
                                 value = searchQuery,
                                 onValueChange = { searchQuery = it },
                                 modifier = Modifier.fillMaxWidth(),
-                                placeholder = { Text("Search people") },
+                                placeholder = { Text(stringResource(R.string.search_people_hint)) },
                                 leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
                                 shape = RoundedCornerShape(18.dp),
                                 colors = OutlinedTextFieldDefaults.colors(
@@ -321,7 +323,7 @@ fun DashboardScreen(
                                 ) {
                                     Icon(
                                         Icons.Default.Delete,
-                                        contentDescription = "Delete",
+                                        contentDescription = stringResource(R.string.dashboard_delete_content_desc),
                                         tint = MaterialTheme.colorScheme.onErrorContainer
                                     )
                                 }
@@ -379,7 +381,7 @@ fun SummaryCard(stats: DashboardStats, isDarkMode: Boolean) {
                     color = MaterialTheme.colorScheme.surface.copy(alpha = 0.75f)
                 ) {
                     Text(
-                        text = "Total Net Balance",
+                        text = stringResource(R.string.total_net_balance),
                         modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
                         style = MaterialTheme.typography.labelMedium,
                         fontWeight = FontWeight.Bold,
@@ -394,7 +396,7 @@ fun SummaryCard(stats: DashboardStats, isDarkMode: Boolean) {
                     color = MaterialTheme.colorScheme.onSurface
                 )
                 Text(
-                    text = if (stats.netBalance >= 0) "You are in the clear overall." else "You currently owe more than you are owed.",
+                    text = if (stats.netBalance >= 0) stringResource(R.string.net_balance_positive) else stringResource(R.string.net_balance_negative),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -406,14 +408,14 @@ fun SummaryCard(stats: DashboardStats, isDarkMode: Boolean) {
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     SummaryInfoItem(
-                        label = "Receivable",
+                        label = stringResource(R.string.receivable),
                         amount = stats.totalReceivable,
                         icon = Icons.Default.Add,
                         contentColor = receivableColor,
                         modifier = Modifier.weight(1f)
                     )
                     SummaryInfoItem(
-                        label = "Payable",
+                        label = stringResource(R.string.payable),
                         amount = stats.totalPayable,
                         icon = Icons.Default.History,
                         contentColor = payableColor,
@@ -492,7 +494,7 @@ fun FollowUpCard(dueStatuses: List<PersonDueStatus>) {
                         .background(if (overdueStatuses.isNotEmpty()) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary)
                 )
                 Text(
-                    text = "Needs Follow-up",
+                    text = stringResource(R.string.needs_follow_up),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold
                 )
@@ -500,9 +502,9 @@ fun FollowUpCard(dueStatuses: List<PersonDueStatus>) {
             Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = if (overdueStatuses.isNotEmpty()) {
-                    "${overdueStatuses.size} overdue contact(s) totaling ${MoneyFormatter.format(overdueAmount, absolute = true)}"
+                    stringResource(R.string.overdue_summary, overdueStatuses.size, MoneyFormatter.format(overdueAmount, absolute = true))
                 } else {
-                    "All upcoming dues are on track."
+                    stringResource(R.string.dues_on_track)
                 },
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -518,11 +520,11 @@ fun FollowUpCard(dueStatuses: List<PersonDueStatus>) {
                     label = {
                         Text(
                             if (it.isPromiseMissed && it.promisedPaymentDate != null) {
-                                "${it.person.name} missed promised date ${dateFormatter.format(Date(it.promisedPaymentDate))}"
+                                stringResource(R.string.promise_missed_label, it.person.name, dateFormatter.format(Date(it.promisedPaymentDate)))
                             } else if (it.isOverdue) {
-                                "${it.person.name} overdue since ${dateFormatter.format(Date(it.dueDate))}"
+                                stringResource(R.string.overdue_label, it.person.name, dateFormatter.format(Date(it.dueDate)))
                             } else {
-                                "${it.person.name} due on ${dateFormatter.format(Date(it.dueDate))}"
+                                stringResource(R.string.due_on_label, it.person.name, dateFormatter.format(Date(it.dueDate)))
                             }
                         )
                     }
@@ -551,21 +553,21 @@ fun CashFlowMiniTrend(stats: DashboardStats, isDarkMode: Boolean) {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "Cash Flow Split",
+                text = stringResource(R.string.cash_flow_split),
                 style = MaterialTheme.typography.labelMedium,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             if (total > 0f) {
                 Text(
-                    text = "${(receivableWeight * 100).toInt()}% Receivable",
+                    text = stringResource(R.string.percent_receivable, (receivableWeight * 100).toInt()),
                     style = MaterialTheme.typography.labelSmall,
                     fontWeight = FontWeight.Bold,
                     color = receivableColor
                 )
             } else {
                 Text(
-                    text = "No Activity",
+                    text = stringResource(R.string.no_activity),
                     style = MaterialTheme.typography.labelSmall,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
@@ -679,7 +681,7 @@ fun PersonItem(personWithBalance: PersonWithBalance, isDarkMode: Boolean, dueSta
                     color = balanceColor
                 )
                 Text(
-                    text = if (personWithBalance.balance >= 0) "Receivable" else "Payable",
+                    text = if (personWithBalance.balance >= 0) stringResource(R.string.receivable) else stringResource(R.string.payable),
                     style = MaterialTheme.typography.labelSmall,
                     fontWeight = FontWeight.Bold,
                     color = balanceColor.copy(alpha = 0.85f)
@@ -704,14 +706,14 @@ fun DueStatusPill(dueStatus: PersonDueStatus) {
     }
     val label = if (dueStatus.isOverdue) {
         if (dueStatus.isPromiseMissed && dueStatus.promisedPaymentDate != null) {
-            "Promise missed"
+            stringResource(R.string.due_status_promise_missed)
         } else {
-            "Overdue ${dueStatus.daysOffset}d"
+            stringResource(R.string.due_status_overdue, dueStatus.daysOffset)
         }
     } else {
         dueStatus.promisedPaymentDate?.let {
-            "Promised ${dateFormatter.format(Date(it))}"
-        } ?: "Due ${dateFormatter.format(Date(dueStatus.dueDate))}"
+            stringResource(R.string.due_status_promised, dateFormatter.format(Date(it)))
+        } ?: stringResource(R.string.due_status_due, dateFormatter.format(Date(dueStatus.dueDate)))
     }
 
     Surface(
@@ -733,10 +735,10 @@ fun DueStatusPill(dueStatus: PersonDueStatus) {
 fun EmptyState(onAddPerson: () -> Unit, isSearch: Boolean = false) {
     PremiumEmptyState(
         icon = if (isSearch) Icons.Default.Search else Icons.Outlined.People,
-        title = if (isSearch) "No results found" else "Your contact list is empty",
-        subtitle = if (isSearch) "Try searching with a different name or spelling." else "Start by adding someone you've had a transaction with.",
+        title = if (isSearch) stringResource(R.string.empty_state_search_title) else stringResource(R.string.empty_state_contacts_title),
+        subtitle = if (isSearch) stringResource(R.string.empty_state_search_subtitle) else stringResource(R.string.empty_state_contacts_subtitle),
         isSearch = isSearch,
-        actionLabel = if (isSearch) null else "Add First Contact",
+        actionLabel = if (isSearch) null else stringResource(R.string.empty_state_add_contact_btn),
         onAction = if (isSearch) null else onAddPerson,
         modifier = Modifier.padding(top = 48.dp, bottom = 80.dp)
     )

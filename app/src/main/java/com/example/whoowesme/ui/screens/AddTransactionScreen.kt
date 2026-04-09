@@ -80,6 +80,9 @@ import java.util.Date
 import java.util.Locale
 import java.util.UUID
 
+import androidx.compose.ui.res.stringResource
+import com.example.whoowesme.R
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddTransactionScreen(
@@ -162,10 +165,10 @@ fun AddTransactionScreen(
                 TextButton(onClick = {
                     datePickerState.selectedDateMillis?.let { transactionDate = it }
                     showDatePicker = false
-                }) { Text("OK") }
+                }) { Text(stringResource(R.string.ok)) }
             },
             dismissButton = {
-                TextButton(onClick = { showDatePicker = false }) { Text("Cancel") }
+                TextButton(onClick = { showDatePicker = false }) { Text(stringResource(R.string.cancel)) }
             }
         ) {
             DatePicker(state = datePickerState)
@@ -180,13 +183,13 @@ fun AddTransactionScreen(
                 TextButton(onClick = {
                     dueDate = dueDatePickerState.selectedDateMillis
                     showDueDatePicker = false
-                }) { Text("OK") }
+                }) { Text(stringResource(R.string.ok)) }
             },
             dismissButton = {
                 TextButton(onClick = {
                     dueDate = null
                     showDueDatePicker = false
-                }) { Text("Clear") }
+                }) { Text(stringResource(R.string.clear)) }
             }
         ) {
             DatePicker(state = dueDatePickerState)
@@ -203,13 +206,13 @@ fun AddTransactionScreen(
                 TextButton(onClick = {
                     promisedPaymentDate = promisedDatePickerState.selectedDateMillis
                     showPromisedDatePicker = false
-                }) { Text("OK") }
+                }) { Text(stringResource(R.string.ok)) }
             },
             dismissButton = {
                 TextButton(onClick = {
                     promisedPaymentDate = null
                     showPromisedDatePicker = false
-                }) { Text("Clear") }
+                }) { Text(stringResource(R.string.clear)) }
             }
         ) {
             DatePicker(state = promisedDatePickerState)
@@ -228,13 +231,13 @@ fun AddTransactionScreen(
             CenterAlignedTopAppBar(
                 title = {
                     Text(
-                        if (transactionId == null) "New Transaction" else "Edit Transaction",
+                        if (transactionId == null) stringResource(R.string.add_transaction_title) else stringResource(R.string.edit_transaction_title),
                         fontWeight = FontWeight.Bold
                     )
                 },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back))
                     }
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
@@ -269,7 +272,7 @@ fun AddTransactionScreen(
                             color = MaterialTheme.colorScheme.surface.copy(alpha = 0.75f)
                         ) {
                             Text(
-                                text = if (transactionId == null) "New entry" else "Update entry",
+                                text = if (transactionId == null) stringResource(R.string.new_entry_label) else stringResource(R.string.update_entry_label),
                                 modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
                                 style = MaterialTheme.typography.labelMedium,
                                 fontWeight = FontWeight.Bold,
@@ -277,12 +280,12 @@ fun AddTransactionScreen(
                             )
                         }
                         Text(
-                            text = if (type == TransactionType.GIVEN) "Capture what was lent with clarity." else "Record what came back.",
+                            text = if (type == TransactionType.GIVEN) stringResource(R.string.add_transaction_tagline_given) else stringResource(R.string.add_transaction_tagline_taken),
                             style = MaterialTheme.typography.headlineSmall,
                             fontWeight = FontWeight.ExtraBold
                         )
                         Text(
-                            text = "Keep the amount obvious and dates optional.",
+                            text = stringResource(R.string.add_transaction_description),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -290,8 +293,8 @@ fun AddTransactionScreen(
                 }
 
                 PremiumTransactionSection(
-                    title = "Transaction Details",
-                    subtitle = "Choose the person and define what happened."
+                    title = stringResource(R.string.section_transaction_details),
+                    subtitle = stringResource(R.string.section_transaction_details_desc)
                 ) {
                     ExposedDropdownMenuBox(
                         expanded = expandedPersonDropdown,
@@ -300,10 +303,10 @@ fun AddTransactionScreen(
                     ) {
                         val selectedPerson = people.find { it.personId == selectedPersonId }
                         OutlinedTextField(
-                            value = selectedPerson?.name ?: "Select Person",
+                            value = selectedPerson?.name ?: stringResource(R.string.hint_select_person),
                             onValueChange = {},
                             readOnly = true,
-                            label = { Text("Person") },
+                            label = { Text(stringResource(R.string.label_person)) },
                             leadingIcon = { Icon(Icons.Outlined.Person, contentDescription = null) },
                             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedPersonDropdown) },
                             colors = premiumTransactionFieldColors(),
@@ -345,7 +348,7 @@ fun AddTransactionScreen(
                             },
                             label = {
                                 Text(
-                                    "I Gave",
+                                    stringResource(R.string.btn_i_gave_chip),
                                     fontWeight = FontWeight.Bold,
                                     modifier = Modifier.padding(vertical = 8.dp, horizontal = 4.dp)
                                 )
@@ -378,7 +381,7 @@ fun AddTransactionScreen(
                             },
                             label = {
                                 Text(
-                                    "They Returned",
+                                    stringResource(R.string.btn_they_returned_chip),
                                     fontWeight = FontWeight.Bold,
                                     modifier = Modifier.padding(vertical = 8.dp, horizontal = 4.dp)
                                 )
@@ -409,8 +412,8 @@ fun AddTransactionScreen(
                         onValueChange = {
                             if (it.isEmpty() || it.toDoubleOrNull() != null) amount = it
                         },
-                        label = { Text("Amount") },
-                        placeholder = { Text("0.00") },
+                        label = { Text(stringResource(R.string.label_amount)) },
+                        placeholder = { Text(stringResource(R.string.hint_amount)) },
                         prefix = {
                             Text(
                                 "\u20B9 ",
@@ -430,8 +433,8 @@ fun AddTransactionScreen(
                 }
 
                 PremiumTransactionSection(
-                    title = "Dates",
-                    subtitle = "Keep timing simple and only add what matters."
+                    title = stringResource(R.string.section_dates),
+                    subtitle = stringResource(R.string.section_dates_desc)
                 ) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -442,7 +445,7 @@ fun AddTransactionScreen(
                                 value = dateFormatter.format(Date(transactionDate)),
                                 onValueChange = {},
                                 readOnly = true,
-                                label = { Text("Date") },
+                                label = { Text(stringResource(R.string.label_date)) },
                                 leadingIcon = {
                                     Icon(
                                         Icons.Outlined.CalendarToday,
@@ -469,10 +472,10 @@ fun AddTransactionScreen(
                         Box(modifier = Modifier.weight(1f)) {
                             OutlinedTextField(
                                 value = dueDate?.let { dateFormatter.format(Date(it)) }
-                                    ?: if (type == TransactionType.TAKEN) "No Due Date" else "Set Due Date",
+                                    ?: if (type == TransactionType.TAKEN) stringResource(R.string.hint_no_due_date) else stringResource(R.string.label_due_date),
                                 onValueChange = {},
                                 readOnly = true,
-                                label = { Text("Due Date") },
+                                label = { Text(stringResource(R.string.label_due_date)) },
                                 leadingIcon = { Icon(Icons.Outlined.Event, contentDescription = null) },
                                 modifier = Modifier.fillMaxWidth(),
                                 enabled = true,
@@ -498,10 +501,10 @@ fun AddTransactionScreen(
                         Box(modifier = Modifier.fillMaxWidth()) {
                             OutlinedTextField(
                                 value = promisedPaymentDate?.let { dateFormatter.format(Date(it)) }
-                                    ?: "No promised payment date",
+                                    ?: stringResource(R.string.hint_no_promised_payment),
                                 onValueChange = {},
                                 readOnly = true,
-                                label = { Text("Promised Payment") },
+                                label = { Text(stringResource(R.string.label_promised_payment)) },
                                 leadingIcon = {
                                     Icon(
                                         Icons.Outlined.TaskAlt,
@@ -526,8 +529,8 @@ fun AddTransactionScreen(
 
                 if (type == TransactionType.GIVEN) {
                     PremiumTransactionSection(
-                        title = "Repeat & Notes",
-                        subtitle = "Useful for rent, monthly tabs, or anything that repeats."
+                        title = stringResource(R.string.section_repeat_notes),
+                        subtitle = stringResource(R.string.section_repeat_notes_desc)
                     ) {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
@@ -543,9 +546,9 @@ fun AddTransactionScreen(
                                     label = {
                                         Text(
                                             text = when (frequency) {
-                                                RecurrenceFrequency.NONE -> "One time"
-                                                RecurrenceFrequency.WEEKLY -> "Weekly"
-                                                RecurrenceFrequency.MONTHLY -> "Monthly"
+                                                RecurrenceFrequency.NONE -> stringResource(R.string.label_recurrence_none)
+                                                RecurrenceFrequency.WEEKLY -> stringResource(R.string.label_recurrence_weekly)
+                                                RecurrenceFrequency.MONTHLY -> stringResource(R.string.label_recurrence_monthly)
                                             },
                                             fontWeight = FontWeight.Bold
                                         )
@@ -567,8 +570,8 @@ fun AddTransactionScreen(
                         OutlinedTextField(
                             value = note,
                             onValueChange = { note = it },
-                            label = { Text("Note") },
-                            placeholder = { Text("What is this for?") },
+                            label = { Text(stringResource(R.string.label_note)) },
+                            placeholder = { Text(stringResource(R.string.hint_note_given)) },
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(18.dp),
                             minLines = 4,
@@ -583,14 +586,14 @@ fun AddTransactionScreen(
                     }
                 } else {
                     PremiumTransactionSection(
-                        title = "Note",
-                        subtitle = "Optional context for this return or payment."
+                        title = stringResource(R.string.section_note_only),
+                        subtitle = stringResource(R.string.section_note_only_desc)
                     ) {
                         OutlinedTextField(
                             value = note,
                             onValueChange = { note = it },
-                            label = { Text("Note") },
-                            placeholder = { Text("Any detail worth remembering?") },
+                            label = { Text(stringResource(R.string.label_note)) },
+                            placeholder = { Text(stringResource(R.string.hint_note_taken)) },
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(18.dp),
                             minLines = 4,
@@ -654,7 +657,7 @@ fun AddTransactionScreen(
                     enabled = amount.isNotBlank() && (amount.toDoubleOrNull() ?: 0.0) > 0
                 ) {
                     Text(
-                        "Save Transaction",
+                        stringResource(R.string.btn_save_transaction),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )

@@ -49,7 +49,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import com.example.whoowesme.R
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.whoowesme.model.enums.TransactionType
@@ -99,10 +101,10 @@ fun TransactionHistoryScreen(
         containerColor = Color.Transparent,
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("History", fontWeight = FontWeight.Bold) },
+                title = { Text(stringResource(R.string.history_title), fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back))
                     }
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
@@ -119,19 +121,19 @@ fun TransactionHistoryScreen(
                     selected = false,
                     onClick = onNavigateToDashboard,
                     icon = { Icon(Icons.Outlined.AccountBalanceWallet, contentDescription = null) },
-                    label = { Text("Dashboard") }
+                    label = { Text(stringResource(R.string.nav_dashboard)) }
                 )
                 NavigationBarItem(
                     selected = true,
                     onClick = { },
                     icon = { Icon(Icons.Outlined.History, contentDescription = null) },
-                    label = { Text("History") }
+                    label = { Text(stringResource(R.string.nav_history)) }
                 )
                 NavigationBarItem(
                     selected = false,
                     onClick = onNavigateToSettings,
                     icon = { Icon(Icons.Outlined.Settings, contentDescription = null) },
-                    label = { Text("Settings") }
+                    label = { Text(stringResource(R.string.nav_settings)) }
                 )
             }
         }
@@ -160,12 +162,12 @@ fun TransactionHistoryScreen(
                             verticalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
                             Text(
-                                text = "Every entry in one place",
+                                text = stringResource(R.string.history_headline),
                                 style = MaterialTheme.typography.headlineSmall,
                                 fontWeight = FontWeight.ExtraBold
                             )
                             Text(
-                                text = "Search quickly, filter by direction, and jump back into any transaction.",
+                                text = stringResource(R.string.history_subtitle),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -174,7 +176,7 @@ fun TransactionHistoryScreen(
                                 color = MaterialTheme.colorScheme.surface.copy(alpha = 0.78f)
                             ) {
                                 Text(
-                                    text = "${filteredTransactions.size} result(s)",
+                                    text = stringResource(R.string.history_results_label, filteredTransactions.size),
                                     modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
                                     style = MaterialTheme.typography.labelMedium,
                                     fontWeight = FontWeight.Bold,
@@ -193,7 +195,7 @@ fun TransactionHistoryScreen(
                             value = searchQuery,
                             onValueChange = { searchQuery = it },
                             modifier = Modifier.fillMaxWidth(),
-                            placeholder = { Text("Search by name, note, or amount") },
+                            placeholder = { Text(stringResource(R.string.history_search_placeholder)) },
                             leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
                             shape = RoundedCornerShape(20.dp),
                             colors = OutlinedTextFieldDefaults.colors(
@@ -213,13 +215,13 @@ fun TransactionHistoryScreen(
                         FilterChip(
                             selected = selectedTypeFilter == null,
                             onClick = { selectedTypeFilter = null },
-                            label = { Text("All", fontWeight = FontWeight.Bold) },
+                            label = { Text(stringResource(R.string.history_filter_all), fontWeight = FontWeight.Bold) },
                             shape = CircleShape
                         )
                         FilterChip(
                             selected = selectedTypeFilter == TransactionType.GIVEN,
                             onClick = { selectedTypeFilter = TransactionType.GIVEN },
-                            label = { Text("Gave", fontWeight = FontWeight.Bold) },
+                            label = { Text(stringResource(R.string.history_filter_gave), fontWeight = FontWeight.Bold) },
                             shape = CircleShape,
                             colors = FilterChipDefaults.filterChipColors(
                                 selectedContainerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.6f)
@@ -231,7 +233,7 @@ fun TransactionHistoryScreen(
                         FilterChip(
                             selected = selectedTypeFilter == TransactionType.TAKEN,
                             onClick = { selectedTypeFilter = TransactionType.TAKEN },
-                            label = { Text("Returned", fontWeight = FontWeight.Bold) },
+                            label = { Text(stringResource(R.string.history_filter_returned), fontWeight = FontWeight.Bold) },
                             shape = CircleShape,
                             colors = FilterChipDefaults.filterChipColors(
                                 selectedContainerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.6f)
@@ -277,8 +279,8 @@ fun TransactionHistoryScreen(
 fun EmptyHistoryState(isSearch: Boolean) {
     PremiumEmptyState(
         icon = if (isSearch) Icons.Default.Search else Icons.Outlined.History,
-        title = if (isSearch) "No transactions found" else "No history yet",
-        subtitle = if (isSearch) "Try another search term or clear the filters." else "Every transaction you save will appear here.",
+        title = if (isSearch) stringResource(R.string.history_empty_search_title) else stringResource(R.string.history_empty_title),
+        subtitle = if (isSearch) stringResource(R.string.history_empty_search_subtitle) else stringResource(R.string.history_empty_subtitle),
         isSearch = isSearch,
         modifier = Modifier.padding(top = 48.dp)
     )

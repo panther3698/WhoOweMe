@@ -1,16 +1,18 @@
 package com.example.whoowesme.model
 
-enum class ReminderTone(val title: String, val description: String) {
+import com.example.whoowesme.R
+
+enum class ReminderTone(val titleRes: Int, val descriptionRes: Int) {
     GENTLE(
-        title = "Gentle",
-        description = "Friendly follow-up for people who usually pay back."
+        titleRes = R.string.reminder_tone_gentle_title,
+        descriptionRes = R.string.reminder_tone_gentle_desc
     ),
     DIRECT(
-        title = "Direct",
-        description = "Clear and professional reminder with the amount due."
+        titleRes = R.string.reminder_tone_direct_title,
+        descriptionRes = R.string.reminder_tone_direct_desc
     ),
     URGENT(
-        title = "Urgent",
-        description = "Firm wording for overdue balances that need action."
+        titleRes = R.string.reminder_tone_urgent_title,
+        descriptionRes = R.string.reminder_tone_urgent_desc
     )
 }

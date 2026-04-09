@@ -8,6 +8,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import androidx.work.*
+import com.example.whoowesme.R
 import com.example.whoowesme.data.SettingsManager
 import com.example.whoowesme.model.PersonDueStatus
 import com.example.whoowesme.repository.AppRepository
@@ -50,11 +51,11 @@ class MainViewModel(
     val remindersEnabled: StateFlow<Boolean> = settingsManager.remindersEnabled
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
 
-    val onboardingCompleted: StateFlow<Boolean> = settingsManager.onboardingCompleted
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+    val onboardingCompleted: StateFlow<Boolean?> = settingsManager.onboardingCompleted
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
-    val appLockEnabled: StateFlow<Boolean> = settingsManager.appLockEnabled
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+    val appLockEnabled: StateFlow<Boolean?> = settingsManager.appLockEnabled
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
     fun setDarkMode(enabled: Boolean) {
         viewModelScope.launch { settingsManager.setDarkMode(enabled) }
@@ -274,8 +275,8 @@ class MainViewModel(
             SimpleDateFormat("dd MMM yyyy", Locale.getDefault()).format(Date(it))
         }
         val message = when {
-            balance > 0 -> buildReceivableReminder(person.name, amountText, tone, dueDateText)
-            balance < 0 -> "Hi ${person.name}, I still owe you $amountText. I'll settle it soon."
+            balance > 0 -> buildReceivableReminder(context, person.name, amountText, tone, dueDateText)
+            balance < 0 -> context.getString(R.string.reminder_template_payable, person.name, amountText)
             else -> return
         }
 
@@ -298,7 +299,7 @@ class MainViewModel(
                 putExtra(Intent.EXTRA_TEXT, message)
                 type = "text/plain"
             }
-            val chooser = Intent.createChooser(genericIntent, "Send Reminder via")
+            val chooser = Intent.createChooser(genericIntent, context.getString(R.string.person_detail_send_chooser_title))
             // If context is not an Activity, we need NEW_TASK flag for the chooser as well
             if (context !is android.app.Activity) {
                 chooser.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
@@ -306,7 +307,7 @@ class MainViewModel(
             try {
                 context.startActivity(chooser)
             } catch (ex: Exception) {
-                Toast.makeText(context, "No app found to send reminder", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, context.getString(R.string.person_detail_no_app_found), Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -367,20 +368,19 @@ class MainViewModel(
     suspend fun getTransactionById(transactionId: Long): MoneyTransaction? = repository.getTransactionById(transactionId)
 
     private fun buildReceivableReminder(
+        context: Context,
         personName: String,
         amountText: String,
         tone: ReminderTone,
         dueDateText: String?
     ): String {
-        val dueLine = dueDateText?.let { " It was due on $it." } ?: ""
-        return when (tone) {
-            ReminderTone.GENTLE ->
-                "Hi $personName, just a gentle reminder that $amountText is still pending.$dueLine Please send it when you get a chance. Thank you."
-            ReminderTone.DIRECT ->
-                "Hi $personName, this is a reminder that $amountText is pending.$dueLine Please let me know when I can expect the payment."
-            ReminderTone.URGENT ->
-                "Hi $personName, $amountText is still overdue.$dueLine Please clear it as soon as possible or share a concrete payment date today."
+        val dueLine = dueDateText?.let { context.getString(R.string.reminder_due_date_line, it) } ?: ""
+        val templateRes = when (tone) {
+            ReminderTone.GENTLE -> R.string.reminder_template_gentle
+            ReminderTone.DIRECT -> R.string.reminder_template_direct
+            ReminderTone.URGENT -> R.string.reminder_template_urgent
         }
+        return context.getString(templateRes, personName, amountText, dueLine)
     }
 
     companion object {

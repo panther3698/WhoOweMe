@@ -14,9 +14,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.whoowesme.R
 import com.example.whoowesme.ui.theme.BackdropBottomDark
 import com.example.whoowesme.ui.theme.BackdropBottomLight
 import com.example.whoowesme.ui.theme.BackdropTopDark
@@ -51,14 +53,14 @@ fun PrivacyPolicyScreen(
                     ),
                     title = { 
                         Text(
-                            "Privacy Policy", 
+                            stringResource(R.string.privacy_policy_header), 
                             fontWeight = FontWeight.Black,
                             style = MaterialTheme.typography.titleLarge
                         ) 
                     },
                     navigationIcon = {
                         IconButton(onClick = onNavigateBack) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back))
                         }
                     }
                 )
@@ -78,8 +80,8 @@ fun PrivacyPolicyScreen(
                 ) {
                     Column(modifier = Modifier.padding(24.dp)) {
                         PrivacySection(
-                            title = "1. Information We Collect",
-                            content = "Who Owes Me collects data you enter manually, including person names, phone numbers, and transaction details. This data is stored locally on your device and can be synced to Google Firebase if you choose to sign in."
+                            title = stringResource(R.string.privacy_section_1_title),
+                            content = stringResource(R.string.privacy_section_1_content)
                         )
                         
                         HorizontalDivider(
@@ -88,8 +90,8 @@ fun PrivacyPolicyScreen(
                         )
                         
                         PrivacySection(
-                            title = "2. How We Use Your Information",
-                            content = "The information is used solely to provide the app's core functionality: tracking debts, sending reminders, and generating reports. We do not sell or share your personal data with third parties."
+                            title = stringResource(R.string.privacy_section_2_title),
+                            content = stringResource(R.string.privacy_section_2_content)
                         )
                         
                         HorizontalDivider(
@@ -98,8 +100,8 @@ fun PrivacyPolicyScreen(
                         )
                         
                         PrivacySection(
-                            title = "3. Data Security",
-                            content = "We use industry-standard security measures to protect your data. When synced to the cloud, your data is protected by Firebase Security Rules and encrypted in transit."
+                            title = stringResource(R.string.privacy_section_3_title),
+                            content = stringResource(R.string.privacy_section_3_content)
                         )
                         
                         HorizontalDivider(
@@ -108,8 +110,8 @@ fun PrivacyPolicyScreen(
                         )
                         
                         PrivacySection(
-                            title = "4. Permissions",
-                            content = "The app may request access to your contacts (to easily add people) and notifications (to send reminders). These are optional but enhance the user experience."
+                            title = stringResource(R.string.privacy_section_4_title),
+                            content = stringResource(R.string.privacy_section_4_content)
                         )
                         
                         HorizontalDivider(
@@ -118,14 +120,14 @@ fun PrivacyPolicyScreen(
                         )
                         
                         PrivacySection(
-                            title = "5. Changes to This Policy",
-                            content = "We may update our Privacy Policy from time to time. You are advised to review this page periodically for any changes."
+                            title = stringResource(R.string.privacy_section_5_title),
+                            content = stringResource(R.string.privacy_section_5_content)
                         )
                         
                         Spacer(modifier = Modifier.height(32.dp))
                         
                         Text(
-                            text = "Last updated: October 2023",
+                            text = stringResource(R.string.privacy_last_updated),
                             style = MaterialTheme.typography.labelMedium,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f),

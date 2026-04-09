@@ -46,7 +46,7 @@ import kotlinx.coroutines.launch
 
 class MainActivity : FragmentActivity() {
     private lateinit var settingsManager: SettingsManager
-    private var isAppUnlocked by mutableStateOf(true)
+    private var isAppUnlocked by mutableStateOf(false)
     private var authInProgress = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -62,22 +62,27 @@ class MainActivity : FragmentActivity() {
         setContent {
             val viewModel: MainViewModel = viewModel(factory = viewModelFactory)
             val isDarkMode by viewModel.isDarkMode.collectAsState(initial = false)
-            val onboardingCompleted by viewModel.onboardingCompleted.collectAsState(initial = false)
-            val appLockEnabled by viewModel.appLockEnabled.collectAsState(initial = false)
+            val onboardingCompleted by viewModel.onboardingCompleted.collectAsState(initial = null)
+            val appLockEnabled by viewModel.appLockEnabled.collectAsState(initial = null)
 
             WhoOwesMeTheme(darkTheme = isDarkMode) {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    if (appLockEnabled && !isAppUnlocked) {
+                    if (onboardingCompleted == null || appLockEnabled == null) {
+                        // Keep splash screen or show empty while loading from DataStore
+                        return@Surface
+                    }
+
+                    if (appLockEnabled == true && !isAppUnlocked) {
                         AppLockScreen(
                             viewModel = viewModel,
                             onUnlock = { requestAppUnlock() }
                         )
                     } else {
                         val navController = rememberNavController()
-                        val startDestination = if (!onboardingCompleted) "onboarding" else "dashboard"
+                        val startDestination = if (onboardingCompleted == false) "onboarding" else "dashboard"
 
                         NavHost(
                             navController = navController,
@@ -203,9 +208,12 @@ class MainActivity : FragmentActivity() {
         super.onStart()
         if (::settingsManager.isInitialized) {
             lifecycleScope.launch {
-                if (settingsManager.appLockEnabled.first()) {
+                val enabled = settingsManager.appLockEnabled.first()
+                if (enabled) {
                     isAppUnlocked = false
                     requestAppUnlock()
+                } else {
+                    isAppUnlocked = true
                 }
             }
         }

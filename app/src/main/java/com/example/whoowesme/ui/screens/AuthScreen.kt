@@ -14,10 +14,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import com.example.whoowesme.R
 import com.example.whoowesme.ui.theme.BackdropBottomDark
 import com.example.whoowesme.ui.theme.BackdropBottomLight
 import com.example.whoowesme.ui.theme.BackdropTopDark
@@ -73,14 +74,14 @@ fun AuthScreen(
             Spacer(modifier = Modifier.height(24.dp))
 
             Text(
-                text = if (isLogin) "Welcome Back" else "Create Account",
+                text = if (isLogin) stringResource(R.string.auth_welcome_back) else stringResource(R.string.auth_create_account),
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.ExtraBold,
                 color = MaterialTheme.colorScheme.onSurface
             )
             
             Text(
-                text = if (isLogin) "Sign in to sync your data" else "Sign up to backup your debts in the cloud",
+                text = if (isLogin) stringResource(R.string.auth_sign_in_subtitle) else stringResource(R.string.auth_sign_up_subtitle),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -96,7 +97,7 @@ fun AuthScreen(
                     OutlinedTextField(
                         value = email,
                         onValueChange = { email = it },
-                        label = { Text("Email") },
+                        label = { Text(stringResource(R.string.auth_label_email)) },
                         modifier = Modifier.fillMaxWidth(),
                         leadingIcon = { Icon(Icons.Default.Email, contentDescription = null) },
                         shape = RoundedCornerShape(18.dp),
@@ -113,7 +114,7 @@ fun AuthScreen(
                     OutlinedTextField(
                         value = password,
                         onValueChange = { password = it },
-                        label = { Text("Password") },
+                        label = { Text(stringResource(R.string.auth_label_password)) },
                         modifier = Modifier.fillMaxWidth(),
                         leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null) },
                         visualTransformation = PasswordVisualTransformation(),
@@ -151,7 +152,7 @@ fun AuthScreen(
                 )
             ) {
                 Text(
-                    if (isLogin) "Sign In" else "Sign Up",
+                    if (isLogin) stringResource(R.string.auth_btn_sign_in) else stringResource(R.string.auth_btn_sign_up),
                     fontWeight = FontWeight.Bold,
                     style = MaterialTheme.typography.titleMedium
                 )
@@ -162,7 +163,7 @@ fun AuthScreen(
                 modifier = Modifier.padding(top = 8.dp)
             ) {
                 Text(
-                    if (isLogin) "Don't have an account? Sign Up" else "Already have an account? Sign In",
+                    if (isLogin) stringResource(R.string.auth_no_account) else stringResource(R.string.auth_has_account),
                     color = MaterialTheme.colorScheme.primary,
                     fontWeight = FontWeight.SemiBold
                 )
@@ -171,7 +172,7 @@ fun AuthScreen(
             Spacer(modifier = Modifier.height(16.dp))
             
             TextButton(onClick = onAuthSuccess) {
-                Text("Skip for now", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(stringResource(R.string.auth_skip), color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
     }

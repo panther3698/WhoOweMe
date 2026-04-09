@@ -15,8 +15,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import com.example.whoowesme.R
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.whoowesme.ui.theme.BackdropBottomDark
@@ -70,7 +72,7 @@ fun AppLockScreen(
             Spacer(modifier = Modifier.height(32.dp))
             
             Text(
-                text = "App Locked",
+                text = stringResource(R.string.app_lock_screen_title),
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.ExtraBold,
                 color = MaterialTheme.colorScheme.onSurface
@@ -79,7 +81,7 @@ fun AppLockScreen(
             Spacer(modifier = Modifier.height(12.dp))
             
             Text(
-                text = "Unlock the app to view balances, reminders, and transaction history.",
+                text = stringResource(R.string.app_lock_screen_subtitle),
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
@@ -98,7 +100,7 @@ fun AppLockScreen(
                 elevation = ButtonDefaults.buttonElevation(defaultElevation = 2.dp)
             ) {
                 Text(
-                    "Unlock App",
+                    stringResource(R.string.app_lock_btn_unlock),
                     fontWeight = FontWeight.Bold,
                     style = MaterialTheme.typography.titleMedium
                 )

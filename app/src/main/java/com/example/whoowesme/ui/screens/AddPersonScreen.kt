@@ -79,6 +79,9 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
+import androidx.compose.ui.res.stringResource
+import com.example.whoowesme.R
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddPersonScreen(
@@ -111,10 +114,10 @@ fun AddPersonScreen(
                 TextButton(onClick = {
                     datePickerState.selectedDateMillis?.let { transactionDate = it }
                     showDatePicker = false
-                }) { Text("OK") }
+                }) { Text(stringResource(R.string.ok)) }
             },
             dismissButton = {
-                TextButton(onClick = { showDatePicker = false }) { Text("Cancel") }
+                TextButton(onClick = { showDatePicker = false }) { Text(stringResource(R.string.cancel)) }
             }
         ) {
             DatePicker(state = datePickerState)
@@ -129,13 +132,13 @@ fun AddPersonScreen(
                 TextButton(onClick = {
                     dueDate = dueDatePickerState.selectedDateMillis
                     showDueDatePicker = false
-                }) { Text("OK") }
+                }) { Text(stringResource(R.string.ok)) }
             },
             dismissButton = {
                 TextButton(onClick = {
                     dueDate = null
                     showDueDatePicker = false
-                }) { Text("Clear") }
+                }) { Text(stringResource(R.string.clear)) }
             }
         ) {
             DatePicker(state = dueDatePickerState)
@@ -197,13 +200,13 @@ fun AddPersonScreen(
             CenterAlignedTopAppBar(
                 title = {
                     Text(
-                        if (isEditMode) "Edit Contact" else "Add Contact",
+                        if (isEditMode) stringResource(R.string.edit_contact_title_screen) else stringResource(R.string.add_contact_title),
                         fontWeight = FontWeight.Bold
                     )
                 },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back))
                     }
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
@@ -238,7 +241,7 @@ fun AddPersonScreen(
                             color = MaterialTheme.colorScheme.surface.copy(alpha = 0.75f)
                         ) {
                             Text(
-                                text = if (isEditMode) "Contact profile" else "New person",
+                                text = if (isEditMode) stringResource(R.string.contact_profile_label) else stringResource(R.string.new_person_label),
                                 modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
                                 style = MaterialTheme.typography.labelMedium,
                                 fontWeight = FontWeight.Bold,
@@ -246,12 +249,12 @@ fun AddPersonScreen(
                             )
                         }
                         Text(
-                            text = if (isEditMode) "Make this contact instantly recognizable." else "Add someone once and start tracking without friction.",
+                            text = if (isEditMode) stringResource(R.string.edit_contact_tagline) else stringResource(R.string.add_contact_tagline),
                             style = MaterialTheme.typography.headlineSmall,
                             fontWeight = FontWeight.ExtraBold
                         )
                         Text(
-                            text = "Keep the basics light, and only add an opening balance if you need it.",
+                            text = stringResource(R.string.add_contact_description),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -259,14 +262,14 @@ fun AddPersonScreen(
                 }
 
                 PremiumFormSection(
-                    title = "Contact Details",
-                    subtitle = "The essentials you’ll use every time."
+                    title = stringResource(R.string.section_contact_details),
+                    subtitle = stringResource(R.string.section_contact_details_desc)
                 ) {
                     OutlinedTextField(
                         value = name,
                         onValueChange = { name = it },
-                        label = { Text("Full Name") },
-                        placeholder = { Text("e.g. John Doe") },
+                        label = { Text(stringResource(R.string.label_full_name)) },
+                        placeholder = { Text(stringResource(R.string.hint_full_name)) },
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(18.dp),
                         leadingIcon = { Icon(Icons.Outlined.Person, contentDescription = null) },
@@ -288,14 +291,14 @@ fun AddPersonScreen(
                     ) {
                         Icon(Icons.Default.ContactPage, contentDescription = null)
                         Spacer(modifier = Modifier.width(10.dp))
-                        Text("Import from Contacts", fontWeight = FontWeight.SemiBold)
+                        Text(stringResource(R.string.btn_import_contacts), fontWeight = FontWeight.SemiBold)
                     }
 
                     OutlinedTextField(
                         value = phoneNumber,
                         onValueChange = { phoneNumber = it },
-                        label = { Text("Phone Number") },
-                        placeholder = { Text("Optional") },
+                        label = { Text(stringResource(R.string.label_phone_number)) },
+                        placeholder = { Text(stringResource(R.string.hint_optional)) },
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(18.dp),
                         leadingIcon = { Icon(Icons.Outlined.Phone, contentDescription = null) },
@@ -307,8 +310,8 @@ fun AddPersonScreen(
                     OutlinedTextField(
                         value = notes,
                         onValueChange = { notes = it },
-                        label = { Text("Notes") },
-                        placeholder = { Text("Anything useful to remember?") },
+                        label = { Text(stringResource(R.string.label_notes)) },
+                        placeholder = { Text(stringResource(R.string.hint_notes)) },
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(18.dp),
                         leadingIcon = {
@@ -324,14 +327,14 @@ fun AddPersonScreen(
 
                 if (!isEditMode) {
                     PremiumFormSection(
-                        title = "Opening Balance",
-                        subtitle = "Optional, for debts that already exist before adding this contact."
+                        title = stringResource(R.string.section_opening_balance),
+                        subtitle = stringResource(R.string.section_opening_balance_desc)
                     ) {
                         OutlinedTextField(
                             value = amount,
                             onValueChange = { amount = it },
-                            label = { Text("Amount") },
-                            placeholder = { Text("0.00") },
+                            label = { Text(stringResource(R.string.label_amount)) },
+                            placeholder = { Text(stringResource(R.string.hint_amount)) },
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(18.dp),
                             prefix = { Text("\u20B9 ", fontWeight = FontWeight.Bold) },
@@ -355,7 +358,7 @@ fun AddPersonScreen(
                                     activeContentColor = if (isDarkMode) GreenIncomeDark else GreenIncome
                                 )
                             ) {
-                                Text("I GAVE", fontWeight = FontWeight.Bold)
+                                Text(stringResource(R.string.btn_i_gave), fontWeight = FontWeight.Bold)
                             }
                             SegmentedButton(
                                 selected = transactionType == TransactionType.TAKEN,
@@ -371,7 +374,7 @@ fun AddPersonScreen(
                                     activeContentColor = if (isDarkMode) RedExpenseDark else RedExpense
                                 )
                             ) {
-                                Text("I TOOK", fontWeight = FontWeight.Bold)
+                                Text(stringResource(R.string.btn_i_took), fontWeight = FontWeight.Bold)
                             }
                         }
 
@@ -384,7 +387,7 @@ fun AddPersonScreen(
                                     value = dateFormatter.format(Date(transactionDate)),
                                     onValueChange = {},
                                     readOnly = true,
-                                    label = { Text("Date") },
+                                    label = { Text(stringResource(R.string.label_date)) },
                                     leadingIcon = {
                                         Icon(
                                             Icons.Default.CalendarToday,
@@ -409,10 +412,10 @@ fun AddPersonScreen(
                             Box(modifier = Modifier.weight(1f)) {
                                 OutlinedTextField(
                                     value = dueDate?.let { dateFormatter.format(Date(it)) }
-                                        ?: "Set Due Date",
+                                        ?: stringResource(R.string.hint_set_due_date),
                                     onValueChange = {},
                                     readOnly = true,
-                                    label = { Text("Due Date") },
+                                    label = { Text(stringResource(R.string.label_due_date)) },
                                     leadingIcon = {
                                         Icon(
                                             Icons.Default.Event,
@@ -475,7 +478,7 @@ fun AddPersonScreen(
                     enabled = name.isNotBlank()
                 ) {
                     Text(
-                        if (isEditMode) "Update Contact" else "Save Contact",
+                        if (isEditMode) stringResource(R.string.btn_update_contact) else stringResource(R.string.btn_save_contact),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )

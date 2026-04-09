@@ -5,6 +5,7 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Environment
 import androidx.core.content.FileProvider
+import com.example.whoowesme.R
 import com.example.whoowesme.model.MoneyTransaction
 import com.example.whoowesme.model.Person
 import com.example.whoowesme.model.enums.TransactionType
@@ -40,7 +41,7 @@ object PdfGenerator {
         }
         
         try {
-            context.startActivity(Intent.createChooser(intent, "Open PDF"))
+            context.startActivity(Intent.createChooser(intent, context.getString(R.string.pdf_open_with)))
         } catch (e: Exception) {
             // No app to handle PDF
         }
@@ -61,24 +62,25 @@ object PdfGenerator {
             val document = Document(pdf)
             document.setMargins(40f, 40f, 40f, 40f)
 
-            val primaryColor = DeviceRgb(26, 31, 30) // Darker theme color
-            val brandColor = DeviceRgb(63, 81, 181) // Deep Indigo
+            val primaryColor = DeviceRgb(0, 51, 42) // Deep Emerald
+            val brandColor = DeviceRgb(0, 77, 64) // Brand Emerald
             val accentColor = if (totalBalance >= 0) DeviceRgb(0, 150, 136) else DeviceRgb(211, 47, 47)
             val lightGray = DeviceRgb(248, 249, 250)
             val borderColor = DeviceRgb(233, 236, 239)
             val textSecondary = DeviceRgb(108, 117, 125)
+            // val goldColor = DeviceRgb(255, 215, 0) // Gold for accents
 
             // Header Section
             val headerTable = Table(UnitValue.createPointArray(floatArrayOf(350f, 150f)))
             headerTable.width = UnitValue.createPercentValue(100f)
             
-            headerTable.addCell(Cell().add(Paragraph("Statement")
+            headerTable.addCell(Cell().add(Paragraph(context.getString(R.string.pdf_statement_title))
                 .setBold()
                 .setFontSize(28f)
                 .setFontColor(primaryColor))
                 .setBorder(Border.NO_BORDER))
 
-            headerTable.addCell(Cell().add(Paragraph("WHO OWES ME")
+            headerTable.addCell(Cell().add(Paragraph(context.getString(R.string.pdf_app_name))
                 .setTextAlignment(TextAlignment.RIGHT)
                 .setFontSize(10f)
                 .setBold()
@@ -96,7 +98,7 @@ object PdfGenerator {
             mainInfoTable.width = UnitValue.createPercentValue(100f)
             
             // Client Info
-            val clientCell = Cell().add(Paragraph("CLIENT DETAILS").setFontSize(8f).setBold().setFontColor(textSecondary).setMarginBottom(4f))
+            val clientCell = Cell().add(Paragraph(context.getString(R.string.pdf_client_details)).setFontSize(8f).setBold().setFontColor(textSecondary).setMarginBottom(4f))
                 .add(Paragraph(person.name).setBold().setFontSize(16f).setMarginTop(0f))
             if (person.phoneNumber.isNotEmpty()) {
                 clientCell.add(Paragraph(person.phoneNumber).setFontSize(10f).setFontColor(textSecondary))
@@ -104,7 +106,7 @@ object PdfGenerator {
             mainInfoTable.addCell(clientCell.setBorder(Border.NO_BORDER).setPadding(10f).setBackgroundColor(lightGray))
 
             // Summary Info
-            val balanceLabel = if (totalBalance >= 0) "TOTAL RECEIVABLE" else "TOTAL PAYABLE"
+            val balanceLabel = if (totalBalance >= 0) context.getString(R.string.pdf_total_receivable) else context.getString(R.string.pdf_total_payable)
             val summaryCell = Cell().add(Paragraph(balanceLabel).setFontSize(8f).setBold().setFontColor(textSecondary).setMarginBottom(4f).setTextAlignment(TextAlignment.RIGHT))
                 .add(Paragraph(MoneyFormatter.format(totalBalance, absolute = true))
                     .setBold().setFontSize(22f).setFontColor(accentColor).setTextAlignment(TextAlignment.RIGHT).setMarginTop(0f))
@@ -118,7 +120,11 @@ object PdfGenerator {
             table.width = UnitValue.createPercentValue(100f)
             
             // Header
-            val headers = arrayOf("DATE", "DESCRIPTION", "AMOUNT")
+            val headers = arrayOf(
+                context.getString(R.string.pdf_header_date),
+                context.getString(R.string.pdf_header_description),
+                context.getString(R.string.pdf_header_amount)
+            )
             headers.forEach { h ->
                 table.addHeaderCell(Cell().add(Paragraph(h).setBold().setFontSize(9f).setFontColor(textSecondary))
                     .setBorder(Border.NO_BORDER)
@@ -136,7 +142,8 @@ object PdfGenerator {
                     .setBorder(Border.NO_BORDER).setBorderBottom(bottomBorder).setPadding(10f))
                 
                 // Description (Type + Note)
-                val descPara = Paragraph().add(Paragraph(if (tx.type == TransactionType.GIVEN) "Funds Sent" else "Funds Received").setBold().setFontSize(10f))
+                val descText = if (tx.type == TransactionType.GIVEN) context.getString(R.string.pdf_funds_sent) else context.getString(R.string.pdf_funds_received)
+                val descPara = Paragraph().add(Paragraph(descText).setBold().setFontSize(10f))
                 if (tx.note.isNotBlank()) {
                     descPara.add(Paragraph("\n" + tx.note).setFontSize(8f).setFontColor(textSecondary).setItalic())
                 }
@@ -155,7 +162,7 @@ object PdfGenerator {
             totalTable.width = UnitValue.createPercentValue(100f)
             totalTable.setMarginTop(10f)
             
-            totalTable.addCell(Cell().add(Paragraph("FINAL OUTSTANDING").setBold().setFontSize(11f).setTextAlignment(TextAlignment.RIGHT))
+            totalTable.addCell(Cell().add(Paragraph(context.getString(R.string.pdf_final_outstanding)).setBold().setFontSize(11f).setTextAlignment(TextAlignment.RIGHT))
                 .setBorder(Border.NO_BORDER).setPadding(10f))
             totalTable.addCell(Cell().add(Paragraph(MoneyFormatter.format(totalBalance)).setBold().setFontSize(12f).setTextAlignment(TextAlignment.RIGHT).setFontColor(accentColor))
                 .setBorder(Border.NO_BORDER).setPadding(10f).setBackgroundColor(lightGray))
@@ -168,11 +175,12 @@ object PdfGenerator {
             val footerTable = Table(UnitValue.createPointArray(floatArrayOf(250f, 250f)))
             footerTable.width = UnitValue.createPercentValue(100f)
             
-            footerTable.addCell(Cell().add(Paragraph("Generated on " + SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).format(Date()))
+            val generationDateText = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).format(Date())
+            footerTable.addCell(Cell().add(Paragraph(context.getString(R.string.pdf_generated_on, generationDateText))
                 .setFontSize(8f).setFontColor(textSecondary))
                 .setBorder(Border.NO_BORDER))
                 
-            footerTable.addCell(Cell().add(Paragraph("Digital Statement - Who Owes Me App")
+            footerTable.addCell(Cell().add(Paragraph(context.getString(R.string.pdf_footer_tagline))
                 .setFontSize(8f).setItalic().setFontColor(textSecondary).setTextAlignment(TextAlignment.RIGHT))
                 .setBorder(Border.NO_BORDER))
                 
@@ -211,6 +219,6 @@ object PdfGenerator {
             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         }
         
-        context.startActivity(Intent.createChooser(intent, "Share Statement via"))
+        context.startActivity(Intent.createChooser(intent, context.getString(R.string.pdf_share_with)))
     }
 }

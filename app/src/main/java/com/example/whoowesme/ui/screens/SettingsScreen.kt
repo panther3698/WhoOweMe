@@ -76,6 +76,9 @@ import com.example.whoowesme.viewmodel.MainViewModel
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
+import androidx.compose.ui.res.stringResource
+import com.example.whoowesme.R
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
@@ -97,9 +100,9 @@ fun SettingsScreen(
         scope.launch {
             try {
                 DatabaseBackupManager.exportDatabase(context, uri)
-                Toast.makeText(context, "Backup exported successfully", Toast.LENGTH_LONG).show()
+                Toast.makeText(context, context.getString(R.string.export_backup_success), Toast.LENGTH_LONG).show()
             } catch (e: Exception) {
-                Toast.makeText(context, "Backup export failed: ${e.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, context.getString(R.string.export_backup_failed, e.message), Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -113,9 +116,9 @@ fun SettingsScreen(
     if (restoreUri != null) {
         AlertDialog(
             onDismissRequest = { restoreUri = null },
-            title = { Text("Restore Backup") },
+            title = { Text(stringResource(R.string.restore_backup_title)) },
             text = {
-                Text("Restoring will replace the current local data on this device. Export a fresh backup first if you want a rollback point.")
+                Text(stringResource(R.string.restore_dialog_msg))
             },
             confirmButton = {
                 Button(
@@ -124,22 +127,22 @@ fun SettingsScreen(
                         scope.launch {
                             try {
                                 DatabaseBackupManager.restoreDatabase(context, selectedUri)
-                                Toast.makeText(context, "Backup restored. Restarting app...", Toast.LENGTH_LONG).show()
+                                Toast.makeText(context, context.getString(R.string.restore_success), Toast.LENGTH_LONG).show()
                                 restartApp(context)
                             } catch (e: Exception) {
-                                Toast.makeText(context, "Restore failed: ${e.message}", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, context.getString(R.string.restore_failed, e.message), Toast.LENGTH_SHORT).show()
                             } finally {
                                 restoreUri = null
                             }
                         }
                     }
                 ) {
-                    Text("Restore")
+                    Text(stringResource(R.string.restore_confirm))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { restoreUri = null }) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.cancel))
                 }
             }
         )
@@ -155,10 +158,10 @@ fun SettingsScreen(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("Settings", fontWeight = FontWeight.Bold) },
+                title = { Text(stringResource(R.string.settings_title), fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.settings_back))
                     }
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
@@ -185,12 +188,12 @@ fun SettingsScreen(
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         Text(
-                            text = "Private, simple, and under your control",
+                            text = stringResource(R.string.settings_tagline),
                             style = MaterialTheme.typography.headlineSmall,
                             fontWeight = FontWeight.ExtraBold
                         )
                         Text(
-                            text = "Manage appearance, reminders, privacy, and local data from one calm place.",
+                            text = stringResource(R.string.settings_description),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -198,11 +201,11 @@ fun SettingsScreen(
                 }
             }
 
-            item { SettingsSectionHeader("Preferences") }
+            item { SettingsSectionHeader(stringResource(R.string.settings_header_preferences)) }
             item {
                 SettingsSwitchItem(
-                    title = "Dark Mode",
-                    subtitle = "Toggle dark theme for the app",
+                    title = stringResource(R.string.dark_mode_title),
+                    subtitle = stringResource(R.string.dark_mode_subtitle),
                     icon = Icons.Outlined.DarkMode,
                     checked = isDarkMode,
                     onCheckedChange = { viewModel.setDarkMode(it) }
@@ -210,8 +213,8 @@ fun SettingsScreen(
             }
             item {
                 SettingsSwitchItem(
-                    title = "Reminders",
-                    subtitle = "Get notified about due transactions",
+                    title = stringResource(R.string.reminders_title),
+                    subtitle = stringResource(R.string.reminders_subtitle),
                     icon = Icons.Outlined.Notifications,
                     checked = remindersEnabled,
                     onCheckedChange = { viewModel.setRemindersEnabled(it) }
@@ -219,13 +222,13 @@ fun SettingsScreen(
             }
             item {
                 SettingsSwitchItem(
-                    title = "App Lock",
-                    subtitle = "Require biometric or device unlock when opening the app",
+                    title = stringResource(R.string.app_lock_title),
+                    subtitle = stringResource(R.string.app_lock_subtitle),
                     icon = Icons.Outlined.Lock,
                     checked = appLockEnabled,
                     onCheckedChange = {
                         if (it && !AppLockManager.isAuthAvailable(context)) {
-                            Toast.makeText(context, "Set up a device lock or biometric first", Toast.LENGTH_LONG).show()
+                            Toast.makeText(context, context.getString(R.string.app_lock_setup_required), Toast.LENGTH_LONG).show()
                         } else {
                             viewModel.setAppLockEnabled(it)
                         }
@@ -233,17 +236,17 @@ fun SettingsScreen(
                 )
             }
 
-            item { SettingsSectionHeader("Data") }
+            item { SettingsSectionHeader(stringResource(R.string.settings_header_data)) }
             item {
                 SettingsClickItem(
-                    title = "Export Statements",
-                    subtitle = "Generate PDF reports for all contacts",
+                    title = stringResource(R.string.export_statements_title),
+                    subtitle = stringResource(R.string.export_statements_subtitle),
                     icon = Icons.Outlined.PictureAsPdf,
                     onClick = {
                         scope.launch {
                             val people = viewModel.peopleWithBalance.first()
                             if (people.isEmpty()) {
-                                Toast.makeText(context, "No data to export", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, context.getString(R.string.export_statements_no_data), Toast.LENGTH_SHORT).show()
                                 return@launch
                             }
 
@@ -260,9 +263,9 @@ fun SettingsScreen(
                             }
 
                             if (successCount > 0) {
-                                Toast.makeText(context, "Generated reports for $successCount people", Toast.LENGTH_LONG).show()
+                                Toast.makeText(context, context.getString(R.string.export_statements_success, successCount), Toast.LENGTH_LONG).show()
                             } else {
-                                Toast.makeText(context, "Export failed", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, context.getString(R.string.export_statements_failed), Toast.LENGTH_SHORT).show()
                             }
                         }
                     }
@@ -270,8 +273,8 @@ fun SettingsScreen(
             }
             item {
                 SettingsClickItem(
-                    title = "Export Backup",
-                    subtitle = "Save a restorable copy of your local data",
+                    title = stringResource(R.string.export_backup_title),
+                    subtitle = stringResource(R.string.export_backup_subtitle),
                     icon = Icons.Outlined.Backup,
                     onClick = {
                         exportBackupLauncher.launch("who_owes_me_backup_${System.currentTimeMillis()}.db")
@@ -280,8 +283,8 @@ fun SettingsScreen(
             }
             item {
                 SettingsClickItem(
-                    title = "Restore Backup",
-                    subtitle = "Import a backup file and restart the app",
+                    title = stringResource(R.string.restore_backup_title),
+                    subtitle = stringResource(R.string.restore_backup_subtitle),
                     icon = Icons.Outlined.Restore,
                     onClick = {
                         restoreBackupLauncher.launch(
@@ -295,31 +298,31 @@ fun SettingsScreen(
                 )
             }
 
-            item { SettingsSectionHeader("Account") }
+            item { SettingsSectionHeader(stringResource(R.string.settings_header_account)) }
             item {
                 SettingsClickItem(
-                    title = "Sign Out",
-                    subtitle = "Logged in as Guest",
+                    title = stringResource(R.string.sign_out_title),
+                    subtitle = stringResource(R.string.guest_account),
                     icon = Icons.AutoMirrored.Outlined.ExitToApp,
                     onClick = {
-                        Toast.makeText(context, "Signed out successfully", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, context.getString(R.string.sign_out_success), Toast.LENGTH_SHORT).show()
                     }
                 )
             }
 
-            item { SettingsSectionHeader("About") }
+            item { SettingsSectionHeader(stringResource(R.string.settings_header_about)) }
             item {
                 SettingsClickItem(
-                    title = "Who Owes Me",
-                    subtitle = "Version 1.0.0 | Premium Edition",
+                    title = stringResource(R.string.app_name),
+                    subtitle = stringResource(R.string.app_version_label),
                     icon = Icons.Outlined.Info,
                     onClick = {}
                 )
             }
             item {
                 SettingsClickItem(
-                    title = "Privacy Policy",
-                    subtitle = "How we handle your data",
+                    title = stringResource(R.string.privacy_policy_title),
+                    subtitle = stringResource(R.string.privacy_policy_subtitle),
                     icon = Icons.Outlined.PrivacyTip,
                     onClick = onNavigateToPrivacyPolicy
                 )

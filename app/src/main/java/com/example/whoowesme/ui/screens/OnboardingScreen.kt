@@ -19,10 +19,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.whoowesme.R
 import com.example.whoowesme.ui.theme.BackdropBottomDark
 import com.example.whoowesme.ui.theme.BackdropBottomLight
 import com.example.whoowesme.ui.theme.BackdropTopDark
@@ -34,7 +36,7 @@ data class OnboardingPage(
     val title: String,
     val description: String,
     val icon: ImageVector,
-    val color: androidx.compose.ui.graphics.Color
+    val color: Color
 )
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -46,21 +48,21 @@ fun OnboardingScreen(
     val isDarkMode by viewModel.isDarkMode.collectAsState(initial = false)
     val pages = listOf(
         OnboardingPage(
-            "Track Debts Easily",
-            "Keep a clear record of who owes you and who you owe, all in one place. No more awkward 'who paid what' moments.",
+            stringResource(R.string.onboarding_page1_title),
+            stringResource(R.string.onboarding_page1_desc),
             Icons.Default.AccountBalanceWallet,
             MaterialTheme.colorScheme.primary
         ),
         OnboardingPage(
-            "Manage Contacts",
-            "Organize transactions by person. See individual balances at a glance with high-contrast visuals.",
+            stringResource(R.string.onboarding_page2_title),
+            stringResource(R.string.onboarding_page2_desc),
             Icons.Default.Group,
             MaterialTheme.colorScheme.secondary
         ),
         OnboardingPage(
-            "Professional Reports",
-            "Generate elegant PDF statements and send polite reminders via WhatsApp with a single tap.",
-            Icons.Default.NotificationsActive,
+            stringResource(R.string.onboarding_page3_title),
+            stringResource(R.string.onboarding_page3_desc),
+            Icons.Default.Description,
             MaterialTheme.colorScheme.tertiary
         )
     )
@@ -191,7 +193,7 @@ fun OnboardingScreen(
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         Text(
-                            text = if (pagerState.currentPage == pages.size - 1) "Get Started" else "Next",
+                            text = if (pagerState.currentPage == pages.size - 1) stringResource(R.string.onboarding_btn_get_started) else stringResource(R.string.onboarding_btn_next),
                             fontWeight = FontWeight.Bold,
                             style = MaterialTheme.typography.titleMedium
                         )

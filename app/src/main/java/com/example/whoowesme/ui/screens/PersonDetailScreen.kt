@@ -20,7 +20,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.graphics.Brush
+import com.example.whoowesme.R
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
@@ -97,8 +99,8 @@ fun PersonDetailScreen(
         AlertDialog(
             onDismissRequest = { showDeletePersonDialog = false },
             icon = { Icon(Icons.Outlined.Delete, contentDescription = null, tint = MaterialTheme.colorScheme.error) },
-            title = { Text("Delete Person") },
-            text = { Text("Are you sure you want to delete ${person?.name}? All transaction history will be lost.") },
+            title = { Text(stringResource(R.string.person_detail_delete_title)) },
+            text = { Text(stringResource(R.string.person_detail_delete_msg, person?.name ?: "")) },
             confirmButton = {
                 Button(
                     onClick = {
@@ -109,12 +111,12 @@ fun PersonDetailScreen(
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
                 ) {
-                    Text("Delete")
+                    Text(stringResource(R.string.delete_confirm))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showDeletePersonDialog = false }) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.cancel))
                 }
             }
         )
@@ -124,13 +126,13 @@ fun PersonDetailScreen(
         AlertDialog(
             onDismissRequest = { showReminderConfirmDialog = false },
             icon = { Icon(Icons.Outlined.NotificationsActive, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
-            title = { Text("Send WhatsApp Reminder?") },
+            title = { Text(stringResource(R.string.person_detail_reminder_title)) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Text("A WhatsApp message will be prepared for ${person?.name} about ${MoneyFormatter.format(totalBalance, absolute = true)}.")
+                    Text(stringResource(R.string.person_detail_reminder_msg, person?.name ?: "", MoneyFormatter.format(totalBalance, absolute = true)))
                     dueDateText?.let {
                         Text(
-                            text = "Current due date: $it",
+                            text = stringResource(R.string.person_detail_current_due_date, it),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -145,9 +147,9 @@ fun PersonDetailScreen(
                                 onClick = { selectedReminderTone = tone }
                             )
                             Column {
-                                Text(tone.title, fontWeight = FontWeight.SemiBold)
+                                Text(stringResource(tone.titleRes), fontWeight = FontWeight.SemiBold)
                                 Text(
-                                    text = tone.description,
+                                    text = stringResource(tone.descriptionRes),
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -172,12 +174,12 @@ fun PersonDetailScreen(
                         showReminderConfirmDialog = false
                     }
                 ) {
-                    Text("Send")
+                    Text(stringResource(R.string.person_detail_send))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showReminderConfirmDialog = false }) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.cancel))
                 }
             }
         )
@@ -190,7 +192,7 @@ fun PersonDetailScreen(
                 title = {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(
-                            person?.name ?: "Details",
+                            person?.name ?: stringResource(R.string.person_detail_title_default),
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.ExtraBold
                         )
@@ -205,12 +207,12 @@ fun PersonDetailScreen(
                 },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back))
                     }
                 },
                 actions = {
                     IconButton(onClick = { onNavigateToEditPerson(personId) }) {
-                        Icon(Icons.Outlined.Edit, contentDescription = "Edit")
+                        Icon(Icons.Outlined.Edit, contentDescription = stringResource(R.string.person_detail_edit))
                     }
                     IconButton(onClick = { 
                         person?.let { p ->
@@ -218,15 +220,15 @@ fun PersonDetailScreen(
                             file?.let { PdfGenerator.openPdf(context, it) }
                         }
                     }) {
-                        Icon(Icons.Outlined.Visibility, contentDescription = "Preview Statement")
+                        Icon(Icons.Outlined.Visibility, contentDescription = stringResource(R.string.person_detail_preview_statement))
                     }
                     IconButton(onClick = { 
                         person?.let { PdfGenerator.generateAndShareStatement(context, it, transactions, totalBalance) }
                     }) {
-                        Icon(Icons.Outlined.Share, contentDescription = "Share Statement")
+                        Icon(Icons.Outlined.Share, contentDescription = stringResource(R.string.person_detail_share_statement))
                     }
                     IconButton(onClick = { showDeletePersonDialog = true }) {
-                        Icon(Icons.Outlined.Delete, contentDescription = "Delete", tint = MaterialTheme.colorScheme.error)
+                        Icon(Icons.Outlined.Delete, contentDescription = stringResource(R.string.person_detail_delete_title), tint = MaterialTheme.colorScheme.error)
                     }
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
@@ -241,7 +243,7 @@ fun PersonDetailScreen(
                 contentColor = MaterialTheme.colorScheme.onPrimary,
                 shape = CircleShape
             ) {
-                Icon(Icons.Default.Add, contentDescription = "Add Transaction")
+                Icon(Icons.Default.Add, contentDescription = stringResource(R.string.person_detail_add_transaction))
             }
         }
     ) { padding ->
@@ -265,7 +267,8 @@ fun PersonDetailScreen(
                 person = person,
                 viewModel = viewModel,
                 onNavigateToAddTransaction = onNavigateToAddTransaction,
-                onSendReminder = { showReminderConfirmDialog = true }
+                onSendReminder = { showReminderConfirmDialog = true },
+                context = context
             )
 
             Row(
@@ -276,7 +279,7 @@ fun PersonDetailScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Transaction History",
+                    text = stringResource(R.string.person_detail_history_section),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold
                 )
@@ -285,7 +288,7 @@ fun PersonDetailScreen(
                     color = MaterialTheme.colorScheme.surface.copy(alpha = 0.92f)
                 ) {
                     Text(
-                        text = "${transactions.size} entries",
+                        text = stringResource(R.string.person_detail_entries_label, transactions.size),
                         modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
                         style = MaterialTheme.typography.labelMedium,
                         fontWeight = FontWeight.Bold,
@@ -349,12 +352,13 @@ fun DetailHeader(
     person: Person?,
     viewModel: MainViewModel,
     onNavigateToAddTransaction: (Long, String?, Long?) -> Unit,
-    onSendReminder: () -> Unit
+    onSendReminder: () -> Unit,
+    context: android.content.Context
 ) {
     val balanceLabel = when {
-        totalBalance > 0 -> "RECEIVABLE"
-        totalBalance < 0 -> "PAYABLE"
-        else -> "SETTLED"
+        totalBalance > 0 -> stringResource(R.string.person_detail_receivable)
+        totalBalance < 0 -> stringResource(R.string.person_detail_payable)
+        else -> stringResource(R.string.person_detail_settled)
     }
 
     val balanceColor = if (totalBalance >= 0) {
@@ -407,9 +411,9 @@ fun DetailHeader(
             Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = when {
-                    totalBalance > 0 -> "Everything due from this person."
-                    totalBalance < 0 -> "What you still need to return."
-                    else -> "No outstanding balance right now."
+                    totalBalance > 0 -> stringResource(R.string.person_detail_desc_receivable)
+                    totalBalance < 0 -> stringResource(R.string.person_detail_desc_payable)
+                    else -> stringResource(R.string.person_detail_desc_settled)
                 },
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -432,7 +436,7 @@ fun DetailHeader(
             ) {
                 ActionButton(
                     icon = Icons.Outlined.AddCircleOutline,
-                    label = "Give",
+                    label = stringResource(R.string.person_detail_btn_give),
                     modifier = Modifier.weight(1f),
                     color = balanceColor,
                     onClick = { person?.let { onNavigateToAddTransaction(it.personId, "GIVEN", null) } }
@@ -440,7 +444,7 @@ fun DetailHeader(
                 
                 ActionButton(
                     icon = Icons.Outlined.History,
-                    label = "Take",
+                    label = stringResource(R.string.person_detail_btn_take),
                     modifier = Modifier.weight(1f),
                     color = balanceColor,
                     onClick = {
@@ -457,7 +461,7 @@ fun DetailHeader(
             ) {
                 ActionButton(
                     icon = Icons.Outlined.CheckCircle,
-                    label = "Settle",
+                    label = stringResource(R.string.person_detail_btn_settle),
                     modifier = Modifier.weight(1f),
                     color = balanceColor,
                     onClick = {
@@ -466,9 +470,9 @@ fun DetailHeader(
                                 val settleType = if (totalBalance > 0) TransactionType.TAKEN else TransactionType.GIVEN
                                 viewModel.addTransaction(
                                     personId = it.personId,
-                                    amount = Math.abs(totalBalance),
+                                    amount = kotlin.math.abs(totalBalance),
                                     type = settleType,
-                                    note = "Settled full balance"
+                                    note = it.name + " " + context.getString(R.string.person_detail_settle_note)
                                 )
                             }
                         }
@@ -477,7 +481,7 @@ fun DetailHeader(
                 
                 ActionButton(
                     icon = Icons.Outlined.NotificationsActive,
-                    label = "Reminder",
+                    label = stringResource(R.string.person_detail_btn_reminder),
                     modifier = Modifier.weight(1f),
                     color = balanceColor,
                     onClick = { if (totalBalance != 0.0) onSendReminder() }
@@ -510,30 +514,30 @@ fun DueStatusBanner(dueDate: Long, promisedPaymentDate: Long?, amount: Double) {
     ) {
         Column(modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp)) {
             Text(
-                text = if (isOverdue) "Overdue follow-up" else "Upcoming due date",
+                text = if (isOverdue) stringResource(R.string.person_detail_overdue_title) else stringResource(R.string.person_detail_upcoming_title),
                 style = MaterialTheme.typography.labelLarge,
                 fontWeight = FontWeight.Bold,
                 color = contentColor
             )
             Text(
                 text = if (isOverdue) {
-                    "${MoneyFormatter.format(amount, absolute = true)} was due on ${dateFormatter.format(Date(dueDate))}"
+                    stringResource(R.string.person_detail_was_due_msg, MoneyFormatter.format(amount, absolute = true), dateFormatter.format(Date(dueDate)))
                 } else {
-                    "${MoneyFormatter.format(amount, absolute = true)} is due on ${dateFormatter.format(Date(dueDate))}"
+                    stringResource(R.string.person_detail_is_due_msg, MoneyFormatter.format(amount, absolute = true), dateFormatter.format(Date(dueDate)))
                 },
                 style = MaterialTheme.typography.bodySmall,
                 color = contentColor
             )
             if (isOverdue) {
                 Text(
-                    text = "Overdue by ${daysOffset} day(s)",
+                    text = stringResource(R.string.person_detail_overdue_days, daysOffset.toInt()),
                     style = MaterialTheme.typography.bodySmall,
                     color = contentColor
                 )
             }
             promisedPaymentDate?.let {
                 Text(
-                    text = "Promised payment: ${dateFormatter.format(Date(it))}",
+                    text = stringResource(R.string.person_detail_promised_msg, dateFormatter.format(Date(it))),
                     style = MaterialTheme.typography.bodySmall,
                     color = contentColor
                 )
@@ -581,8 +585,8 @@ fun ActionButton(
 fun EmptyTransactionsState() {
     PremiumEmptyState(
         icon = Icons.AutoMirrored.Filled.ReceiptLong,
-        title = "No transactions yet",
-        subtitle = "Every time you lend or borrow money from this contact, it will be listed here.",
+        title = stringResource(R.string.person_detail_empty_title),
+        subtitle = stringResource(R.string.person_detail_empty_subtitle),
         modifier = Modifier.padding(top = 40.dp)
     )
 }

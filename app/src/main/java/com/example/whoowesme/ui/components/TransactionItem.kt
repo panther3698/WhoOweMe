@@ -15,6 +15,8 @@ import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Schedule
 import androidx.compose.material3.*
+import androidx.compose.ui.res.stringResource
+import com.example.whoowesme.R
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -70,8 +72,8 @@ fun TransactionItem(
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
             icon = { Icon(Icons.Outlined.Delete, contentDescription = null, tint = MaterialTheme.colorScheme.error) },
-            title = { Text("Delete Transaction") },
-            text = { Text("Are you sure you want to delete this transaction of ${MoneyFormatter.format(transaction.amount)}?") },
+            title = { Text(stringResource(R.string.delete_transaction_title)) },
+            text = { Text(stringResource(R.string.delete_transaction_msg, MoneyFormatter.format(transaction.amount))) },
             confirmButton = {
                 Button(
                     onClick = {
@@ -80,12 +82,12 @@ fun TransactionItem(
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
                 ) {
-                    Text("Delete")
+                    Text(stringResource(R.string.delete_confirm))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteDialog = false }) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.cancel))
                 }
             }
         )
@@ -172,7 +174,7 @@ fun TransactionItem(
                                 )
                             } else {
                                 Text(
-                                    text = if (transaction.type == TransactionType.GIVEN) "You gave" else "They returned",
+                                    text = if (transaction.type == TransactionType.GIVEN) stringResource(R.string.transaction_you_gave) else stringResource(R.string.transaction_they_returned),
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Bold,
                                     color = typeColor
@@ -195,7 +197,7 @@ fun TransactionItem(
                         )
                         if (runningBalance != null) {
                             Text(
-                                text = "Bal: ${MoneyFormatter.format(runningBalance)}",
+                                text = stringResource(R.string.transaction_balance_label, MoneyFormatter.format(runningBalance)),
                                 style = MaterialTheme.typography.labelSmall,
                                 fontWeight = FontWeight.SemiBold,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
@@ -246,8 +248,13 @@ fun TransactionItem(
                                 )
                             }
                             if (transaction.recurrenceFrequency != RecurrenceFrequency.NONE) {
+                                val recurrenceRes = when (transaction.recurrenceFrequency) {
+                                    RecurrenceFrequency.WEEKLY -> R.string.recurrence_weekly
+                                    RecurrenceFrequency.MONTHLY -> R.string.recurrence_monthly
+                                    else -> R.string.recurrence_none
+                                }
                                 InfoPill(
-                                    text = transaction.recurrenceFrequency.name.lowercase().replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() },
+                                    text = stringResource(recurrenceRes),
                                     icon = Icons.Outlined.Schedule
                                 )
                             }
