@@ -8,6 +8,7 @@ import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -31,7 +32,6 @@ import com.example.whoowesme.repository.AppRepository
 import com.example.whoowesme.ui.screens.AddPersonScreen
 import com.example.whoowesme.ui.screens.AddTransactionScreen
 import com.example.whoowesme.ui.screens.AppLockScreen
-import com.example.whoowesme.ui.screens.AuthScreen
 import com.example.whoowesme.ui.screens.DashboardScreen
 import com.example.whoowesme.ui.screens.OnboardingScreen
 import com.example.whoowesme.ui.screens.PersonDetailScreen
@@ -49,6 +49,7 @@ class MainActivity : FragmentActivity() {
     private lateinit var settingsManager: SettingsManager
     private var isAppUnlocked by mutableStateOf(false)
     private var authInProgress = false
+    private var lastStopTimestamp: Long = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
@@ -72,19 +73,13 @@ class MainActivity : FragmentActivity() {
                     color = MaterialTheme.colorScheme.background
                 ) {
                     if (onboardingCompleted == null || appLockEnabled == null) {
-                        // Keep splash screen or show empty while loading from DataStore
                         return@Surface
                     }
 
-                    if (appLockEnabled == true && !isAppUnlocked) {
-                        AppLockScreen(
-                            viewModel = viewModel,
-                            onUnlock = { requestAppUnlock() }
-                        )
-                    } else {
-                        val navController = rememberNavController()
-                        val startDestination = if (onboardingCompleted == false) "onboarding" else "dashboard"
+                    val navController = rememberNavController()
+                    val startDestination = if (onboardingCompleted == false) "onboarding" else "dashboard"
 
+                    Box(modifier = Modifier.fillMaxSize()) {
                         NavHost(
                             navController = navController,
                             startDestination = startDestination,
@@ -199,7 +194,33 @@ class MainActivity : FragmentActivity() {
                                 )
                             }
                         }
+
+                        if (appLockEnabled == true && !isAppUnlocked) {
+                            AppLockScreen(
+                                viewModel = viewModel,
+                                onUnlock = { requestAppUnlock() }
+                            )
+                        }
                     }
+                }
+            }
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (::settingsManager.isInitialized) {
+            lifecycleScope.launch {
+                val enabled = settingsManager.appLockEnabled.first()
+                if (enabled) {
+                    val currentTime = System.currentTimeMillis()
+                    // Only lock if more than 30 seconds have passed since the app was last stopped.
+                    if (!isAppUnlocked || (currentTime - lastStopTimestamp > 30000)) {
+                        isAppUnlocked = false
+                        requestAppUnlock()
+                    }
+                } else {
+                    isAppUnlocked = true
                 }
             }
         }
@@ -207,17 +228,11 @@ class MainActivity : FragmentActivity() {
 
     override fun onStart() {
         super.onStart()
-        if (::settingsManager.isInitialized) {
-            lifecycleScope.launch {
-                val enabled = settingsManager.appLockEnabled.first()
-                if (enabled) {
-                    isAppUnlocked = false
-                    requestAppUnlock()
-                } else {
-                    isAppUnlocked = true
-                }
-            }
-        }
+    }
+
+    override fun onStop() {
+        super.onStop()
+        lastStopTimestamp = System.currentTimeMillis()
     }
 
     private fun requestAppUnlock() {

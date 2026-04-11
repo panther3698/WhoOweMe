@@ -1,46 +1,34 @@
-# Who Owes Me 💸
+# Who Owes Me 💸 (v1.5 - Local Only)
 
 A modern, privacy-focused Android application built with Jetpack Compose to help you track debts, manage repayments, and maintain clear financial records with your contacts.
 
-## 🚀 Features
+## 🚀 What's New in v1.5 (Local Only)
 
+- **Total Privacy**: All Cloud/Firebase dependencies have been removed. Your data never leaves your device.
+- **Robust Local Database**: Upgraded to Room v6 with a smart migration system. Your data is safe even during app updates.
+- **Modern Android Queries**: Enhanced sharing and WhatsApp reminders for Android 11+ (API 30-35).
+- **ProGuard/R8 Optimized**: Fully hardened for release with custom rules for WorkManager and Room stability.
+
+## ✨ Core Features
+
+- **Local Persistence**: All your data stays on your device using a secure, version-controlled Room database.
 - **Transaction Tracking**: Easily record when you give money ("Gave") or receive a repayment ("Took").
-- **Haptic Feedback**: Tactile interaction system with long-press sensations for primary buttons, chips, and list items.
-- **Motion Transitions**: Fluid slide-and-fade navigation transitions (400ms) for a premium feel.
-- **Data Visualization**: High-level overview of cash flow distribution via a custom trend bar on the Dashboard.
-- **Refined Empty States**: Informative and visually appealing states when no contacts or transactions exist.
 - **PDF Statements**: Generate professional transaction reports for any contact and share them instantly via WhatsApp, Email, or other platforms.
-- **Direct WhatsApp Reminders**: Send quick, pre-filled repayment reminders directly to WhatsApp without annoying browser redirects.
-- **Smart Search & Filters**: Find specific entries by name, note, or exact amount. Filter history by transaction type to see your cash flow clearly.
-- **Historical Entry Support**: Backdate transactions or contact creations to keep your records accurate even if you forgot to log them at the time.
-- **Due Date System**: Set and track due dates for debts. Repayments automatically inherit the original debt's timeline for consistency.
+- **Biometric App Lock**: Secure your financial data with fingerprint or face unlock.
+- **Smart Due Dates**: Set and track due dates. Repayments automatically inherit the original debt's timeline for consistency.
+- **Haptic Feedback**: Tactile interaction system with long-press sensations for primary buttons and list items.
 - **Material 3 UI**: A beautiful, responsive interface that supports both Light and Dark modes.
-- **Local Persistence**: All your data stays on your device using a secure Room database.
 
 ## 🛠 Tech Stack
 
 - **UI**: Jetpack Compose with Material 3 & Custom Canvas Drawing
 - **Navigation**: Compose Navigation with `AnimatedContentTransitionScope`
 - **Language**: Kotlin
-- **Database**: Room Persistence Library
+- **Database**: Room Persistence Library (v2.6.1)
 - **Asynchronous Work**: Kotlin Coroutines & Flow
-- **Background Tasks**: WorkManager (for reminders and sync)
+- **Background Tasks**: WorkManager
 - **PDF Generation**: iText7
 - **Architecture**: MVVM (Model-View-ViewModel)
-
-## 📖 Documentation
-
-- **Premium UX Guide**: The app follows a high-fidelity design language using custom `Canvas` for data visualization and `AnimatedContent` for navigation.
-- **Tactile Feedback**: Interactive elements use `HapticFeedbackType.LongPress` to provide physical confirmation of user actions.
-- **Safety & Privacy**: All calculations and data storage are performed locally. Biometric App Lock is available in Settings for added security.
-- **Data Portability**: Users can export full PDF statements or perform SQLite database backups to ensure data longevity.
-
-## 📸 Screen Guide
-
-- **Dashboard**: Overview of total receivables and payables.
-- **Contact Details**: Deep dive into a specific person's history with quick action buttons for settlement and sharing.
-- **Transaction History**: A searchable list of every financial move you've recorded.
-- **Settings**: Customize your experience with Dark Mode and notification preferences.
 
 ## ⚙️ Installation
 
@@ -50,10 +38,6 @@ A modern, privacy-focused Android application built with Jetpack Compose to help
    ```
 2. Open the project in **Android Studio (Ladybug or newer)**.
 3. Build and run on an emulator or physical device (API 24+).
-
-## 📄 License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
 
 ---
 *Built with ❤️ to make managing money between friends simpler.*

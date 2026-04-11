@@ -3,19 +3,18 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.ksp)
     alias(libs.plugins.kotlin.compose)
-    // alias(libs.plugins.google.services)
 }
 
 android {
     namespace = "com.example.whoowesme"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.devchiradhi.whoowesme"
         minSdk = 24
-        targetSdk = 34
-        versionCode = 1
-        versionName = "1.0"
+        targetSdk = 35
+        versionCode = 7
+        versionName = "1.5"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -23,10 +22,24 @@ android {
         }
     }
 
+    ksp {
+        arg("room.schemaLocation", "$projectDir/schemas")
+    }
+
+    signingConfigs {
+        create("release") {
+            storeFile = file("../WhoOwesMe")
+            storePassword = "Whoowesme"
+            keyAlias = "key0"
+            keyPassword = "Whoowesme"
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = true
             isShrinkResources = true
+            signingConfig = signingConfigs.getByName("release")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -67,14 +80,6 @@ dependencies {
 
     // PDF generation
     implementation("com.itextpdf:itext7-core:7.2.5")
-
-    // Firebase
-    // implementation(platform(libs.firebase.bom))
-    // implementation(libs.firebase.analytics)
-    // implementation(libs.firebase.crashlytics)
-    // implementation(libs.firebase.firestore)
-    // implementation(libs.firebase.auth)
-    // implementation(libs.firebase.messaging)
 
     // Splash Screen
     implementation(libs.androidx.core.splashscreen)

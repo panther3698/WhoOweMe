@@ -444,7 +444,7 @@ fun DetailHeader(
                 
                 ActionButton(
                     icon = Icons.Outlined.History,
-                    label = stringResource(R.string.person_detail_btn_take),
+                    label = stringResource(R.string.person_detail_btn_return),
                     modifier = Modifier.weight(1f),
                     color = balanceColor,
                     onClick = {

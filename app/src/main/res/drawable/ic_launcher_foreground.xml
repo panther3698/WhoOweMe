@@ -5,51 +5,56 @@
     android:viewportWidth="108"
     android:viewportHeight="108">
 
-    <!-- Refined Bold 'W' - Increased weight and balance -->
-    <!-- Symbol is centered and scaled to match premium app 'weight' -->
+    <!-- Scaled Group to provide padding and prevent clipping -->
+    <group
+        android:scaleX="0.8"
+        android:scaleY="0.8"
+        android:pivotX="54"
+        android:pivotY="54">
 
-    <!-- Gold Segment (Wealth Flow) -->
-    <path
-        android:pathData="M24,38 L42,74 C43,76 46,76 47,74 L54,58"
-        android:strokeWidth="11"
-        android:strokeLineCap="round"
-        android:strokeLineJoin="round">
-        <aapt:attr name="android:strokeColor">
-            <gradient
-                android:startX="24"
-                android:startY="38"
-                android:endX="54"
-                android:endY="74"
-                android:type="linear">
-                <item android:offset="0" android:color="#FFD700"/>
-                <item android:offset="1" android:color="#FFA000"/>
-            </gradient>
-        </aapt:attr>
-    </path>
+        <!-- Gold Segment (Wealth Flow) -->
+        <path
+            android:pathData="M24,38 L42,74 C43,76 46,76 47,74 L54,58"
+            android:strokeWidth="11"
+            android:strokeLineCap="round"
+            android:strokeLineJoin="round">
+            <aapt:attr name="android:strokeColor">
+                <gradient
+                    android:startX="24"
+                    android:startY="38"
+                    android:endX="54"
+                    android:endY="74"
+                    android:type="linear">
+                    <item android:offset="0" android:color="#EAC248"/>
+                    <item android:offset="1" android:color="#D4AC2B"/>
+                </gradient>
+            </aapt:attr>
+        </path>
 
-    <!-- Silver/White Segment (Return Flow) -->
-    <path
-        android:pathData="M54,58 L61,74 C62,76 65,76 66,74 L84,38"
-        android:strokeWidth="11"
-        android:strokeLineCap="round"
-        android:strokeLineJoin="round">
-        <aapt:attr name="android:strokeColor">
-            <gradient
-                android:startX="54"
-                android:startY="38"
-                android:endX="84"
-                android:endY="74"
-                android:type="linear">
-                <item android:offset="0" android:color="#FFFFFF"/>
-                <item android:offset="1" android:color="#CFD8DC"/>
-            </gradient>
-        </aapt:attr>
-    </path>
+        <!-- Silver/White Segment (Return Flow) -->
+        <path
+            android:pathData="M54,58 L61,74 C62,76 65,76 66,74 L84,38"
+            android:strokeWidth="11"
+            android:strokeLineCap="round"
+            android:strokeLineJoin="round">
+            <aapt:attr name="android:strokeColor">
+                <gradient
+                    android:startX="54"
+                    android:startY="38"
+                    android:endX="84"
+                    android:endY="74"
+                    android:type="linear">
+                    <item android:offset="0" android:color="#FFFFFF"/>
+                    <item android:offset="1" android:color="#CFD8DC"/>
+                </gradient>
+            </aapt:attr>
+        </path>
 
-    <!-- Luxury Overlay Shine -->
-    <path
-        android:fillColor="#FFFFFF"
-        android:fillAlpha="0.15"
-        android:pathData="M54,58 L84,38 L65,30 Z" />
+        <!-- Luxury Overlay Shine -->
+        <path
+            android:fillColor="#FFFFFF"
+            android:fillAlpha="0.15"
+            android:pathData="M54,58 L84,38 L65,30 Z" />
+    </group>
 
 </vector>

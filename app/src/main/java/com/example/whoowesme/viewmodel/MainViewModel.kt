@@ -204,10 +204,7 @@ class MainViewModel(
     }
 
     private fun triggerSync() {
-        val syncRequest = OneTimeWorkRequestBuilder<SyncWorker>()
-            .setConstraints(Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build())
-            .build()
-        workManager.enqueueUniqueWork("cloud_sync", ExistingWorkPolicy.REPLACE, syncRequest)
+        // Sync disabled for now
     }
 
     private suspend fun refreshReminders() {

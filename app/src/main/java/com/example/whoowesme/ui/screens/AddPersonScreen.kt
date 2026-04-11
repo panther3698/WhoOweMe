@@ -1,6 +1,9 @@
 package com.example.whoowesme.ui.screens
 
+import android.Manifest
+import android.content.pm.PackageManager
 import android.provider.ContactsContract
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -48,6 +51,7 @@ import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.core.content.ContextCompat
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -55,6 +59,8 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
@@ -91,15 +97,15 @@ fun AddPersonScreen(
 ) {
     val context = LocalContext.current
     val haptic = LocalHapticFeedback.current
-    var name by remember { mutableStateOf("") }
-    var phoneNumber by remember { mutableStateOf("") }
-    var notes by remember { mutableStateOf("") }
-    var amount by remember { mutableStateOf("") }
-    var transactionType by remember { mutableStateOf(TransactionType.GIVEN) }
-    var transactionDate by remember { mutableStateOf(System.currentTimeMillis()) }
-    var dueDate by remember { mutableStateOf<Long?>(null) }
-    var showDatePicker by remember { mutableStateOf(false) }
-    var showDueDatePicker by remember { mutableStateOf(false) }
+    var name by rememberSaveable { mutableStateOf("") }
+    var phoneNumber by rememberSaveable { mutableStateOf("") }
+    var notes by rememberSaveable { mutableStateOf("") }
+    var amount by rememberSaveable { mutableStateOf("") }
+    var transactionType by rememberSaveable { mutableStateOf(TransactionType.GIVEN) }
+    var transactionDate by rememberSaveable { mutableLongStateOf(System.currentTimeMillis()) }
+    var dueDate by rememberSaveable { mutableStateOf<Long?>(null) }
+    var showDatePicker by rememberSaveable { mutableStateOf(false) }
+    var showDueDatePicker by rememberSaveable { mutableStateOf(false) }
     var existingPerson by remember { mutableStateOf<Person?>(null) }
 
     val dateFormatter = remember { SimpleDateFormat("dd MMM yyyy", Locale.getDefault()) }
@@ -148,8 +154,8 @@ fun AddPersonScreen(
     val contactPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickContact()
     ) { uri ->
-        uri?.let {
-            val cursor = context.contentResolver.query(it, null, null, null, null)
+        uri?.let { contactUri ->
+            val cursor = context.contentResolver.query(contactUri, null, null, null, null)
             cursor?.use { c ->
                 if (c.moveToFirst()) {
                     val id = c.getString(c.getColumnIndexOrThrow(ContactsContract.Contacts._ID))
@@ -168,11 +174,25 @@ fun AddPersonScreen(
                         phones?.use { p ->
                             if (p.moveToFirst()) {
                                 phoneNumber = p.getString(p.getColumnIndexOrThrow(ContactsContract.CommonDataKinds.Phone.NUMBER))
+                                    .replace(" ", "")
+                                    .replace("-", "")
+                                    .replace("(", "")
+                                    .replace(")", "")
                             }
                         }
                     }
                 }
             }
+        }
+    }
+
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            contactPickerLauncher.launch(null)
+        } else {
+            Toast.makeText(context, "Permission required to access contacts", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -280,7 +300,14 @@ fun AddPersonScreen(
                     OutlinedButton(
                         onClick = {
                             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                            contactPickerLauncher.launch(null)
+                            when (ContextCompat.checkSelfPermission(context, Manifest.permission.READ_CONTACTS)) {
+                                PackageManager.PERMISSION_GRANTED -> {
+                                    contactPickerLauncher.launch(null)
+                                }
+                                else -> {
+                                    permissionLauncher.launch(Manifest.permission.READ_CONTACTS)
+                                }
+                            }
                         },
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(18.dp),

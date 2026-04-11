@@ -80,7 +80,7 @@
     <string name="guest_account">Logged in as Guest</string>
     <string name="privacy_policy_title">Privacy Policy</string>
     <string name="privacy_policy_subtitle">How we handle your data</string>
-    <string name="app_version_label">Version 1.0.0 | Premium Edition</string>
+    <string name="app_version_label">Version 1.4 | Stable</string>
     <!-- App Lock -->
     <string name="app_lock_screen_title">App Locked</string>
     <string name="app_lock_screen_subtitle">Unlock the app to view balances, reminders, and transaction history.</string>
@@ -151,18 +151,6 @@
     <string name="recurrence_weekly">Weekly</string>
     <string name="recurrence_monthly">Monthly</string>
 
-    <!-- Auth -->
-    <string name="auth_welcome_back">Welcome Back</string>
-    <string name="auth_create_account">Create Account</string>
-    <string name="auth_sign_in_subtitle">Sign in to sync your data</string>
-    <string name="auth_sign_up_subtitle">Sign up to backup your debts in the cloud</string>
-    <string name="auth_label_email">Email</string>
-    <string name="auth_label_password">Password</string>
-    <string name="auth_btn_sign_in">Sign In</string>
-    <string name="auth_btn_sign_up">Sign Up</string>
-    <string name="auth_no_account">Don\'t have an account? Sign Up</string>
-    <string name="auth_has_account">Already have an account? Sign In</string>
-    <string name="auth_skip">Skip for now</string>
 
     <!-- Person Detail -->
     <string name="person_detail_title_default">Details</string>
@@ -199,7 +187,7 @@
     <string name="person_detail_desc_payable">What you still need to return.</string>
     <string name="person_detail_desc_settled">No outstanding balance right now.</string>
     <string name="person_detail_btn_give">Give</string>
-    <string name="person_detail_btn_take">Take</string>
+    <string name="person_detail_btn_return">Return</string>
     <string name="person_detail_btn_settle">Settle</string>
     <string name="person_detail_btn_reminder">Reminder</string>
     <string name="person_detail_settle_note">Settled full balance</string>
@@ -272,4 +260,5 @@
     <string name="pdf_footer_tagline">Digital Statement - Who Owes Me App</string>
     <string name="pdf_open_with">Open PDF</string>
     <string name="pdf_share_with">Share Statement via</string>
+    <string name="pdf_consolidated_summary">Consolidated Summary</string>
 </resources>

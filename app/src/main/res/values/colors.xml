@@ -4,6 +4,6 @@
     <color name="white">#FFFFFFFF</color>
 
     <!-- Premium Brand Colors -->
-    <color name="ic_launcher_background">#004D40</color>
-    <color name="premium_gold">#FFD700</color>
+    <color name="ic_launcher_background">#1F6C6A</color>
+    <color name="premium_gold">#EAC248</color>
 </resources>

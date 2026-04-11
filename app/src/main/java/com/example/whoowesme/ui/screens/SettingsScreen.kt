@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -244,29 +243,32 @@ fun SettingsScreen(
                     icon = Icons.Outlined.PictureAsPdf,
                     onClick = {
                         scope.launch {
-                            val people = viewModel.peopleWithBalance.first()
-                            if (people.isEmpty()) {
+                            val allPeople = viewModel.allPeople.first()
+                            if (allPeople.isEmpty()) {
                                 Toast.makeText(context, context.getString(R.string.export_statements_no_data), Toast.LENGTH_SHORT).show()
                                 return@launch
                             }
 
-                            var successCount = 0
-                            people.forEach { personWithBalance ->
-                                val transactions = viewModel.getTransactionsForPerson(personWithBalance.person.personId).first()
-                                PdfGenerator.generateAndShareStatement(
-                                    context,
-                                    personWithBalance.person,
-                                    transactions,
-                                    personWithBalance.balance
-                                )
-                                successCount++
+                            val peopleWithBalances = viewModel.peopleWithBalance.first()
+                            val dashboardStats = viewModel.stats.first()
+                            val totalNetBalance = dashboardStats.netBalance
+
+                            val masterData = allPeople.map { person ->
+                                val transactions = viewModel.getTransactionsForPerson(person.personId).first()
+                                val balance = peopleWithBalances.find { it.person.personId == person.personId }?.balance ?: 0.0
+                                Triple(person, transactions, balance)
                             }
 
-                            if (successCount > 0) {
-                                Toast.makeText(context, context.getString(R.string.export_statements_success, successCount), Toast.LENGTH_LONG).show()
-                            } else {
-                                Toast.makeText(context, context.getString(R.string.export_statements_failed), Toast.LENGTH_SHORT).show()
+                            if (masterData.isEmpty()) {
+                                Toast.makeText(context, context.getString(R.string.export_statements_no_data), Toast.LENGTH_SHORT).show()
+                                return@launch
                             }
+
+                            PdfGenerator.generateAndShareMasterStatement(
+                                context,
+                                masterData,
+                                totalNetBalance
+                            )
                         }
                     }
                 )
@@ -294,18 +296,6 @@ fun SettingsScreen(
                                 "*/*"
                             )
                         )
-                    }
-                )
-            }
-
-            item { SettingsSectionHeader(stringResource(R.string.settings_header_account)) }
-            item {
-                SettingsClickItem(
-                    title = stringResource(R.string.sign_out_title),
-                    subtitle = stringResource(R.string.guest_account),
-                    icon = Icons.AutoMirrored.Outlined.ExitToApp,
-                    onClick = {
-                        Toast.makeText(context, context.getString(R.string.sign_out_success), Toast.LENGTH_SHORT).show()
                     }
                 )
             }
